@@ -11,16 +11,78 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${cspSource} 'unsafe-inline'; script-src 'unsafe-inline';">
 <style>
-  :root { color-scheme: light dark; --ct-accent: var(--vscode-textLink-foreground, #3794ff); }
-  body[data-theme="green"] { --ct-accent: #3fb950; }
-  body[data-theme="purple"] { --ct-accent: #a371f7; }
-  body[data-theme="orange"] { --ct-accent: #d29922; }
-  body[data-theme="red"] { --ct-accent: #f85149; }
+  :root {
+    color-scheme: light dark;
+    --ct-bg: var(--vscode-editor-background, transparent);
+    --ct-fg: var(--vscode-foreground, inherit);
+    --ct-card-bg: var(--vscode-editorWidget-background, rgba(128,128,128,0.1));
+    --ct-border: var(--vscode-widget-border, rgba(128,128,128,0.3));
+    --ct-btn-bg: var(--vscode-button-background, #0e639c);
+    --ct-btn-fg: var(--vscode-button-foreground, #fff);
+    --ct-btn-hover: var(--vscode-button-hoverBackground, #1177bb);
+    --ct-btn2-bg: var(--vscode-button-secondaryBackground, #3a3d41);
+    --ct-btn2-fg: var(--vscode-button-secondaryForeground, #fff);
+    --ct-btn2-hover: var(--vscode-button-secondaryHoverBackground, #45494e);
+    --ct-dd-bg: var(--vscode-dropdown-background, #3c3c3c);
+    --ct-dd-fg: var(--vscode-dropdown-foreground, inherit);
+    --ct-hover: var(--vscode-list-hoverBackground, rgba(128,128,128,0.1));
+    --ct-active: var(--vscode-list-activeSelectionBackground, rgba(128,128,128,0.2));
+    --ct-detail-bg: var(--vscode-editor-background, rgba(0,0,0,0.15));
+    --ct-th-bg: var(--vscode-sideBar-background, inherit);
+    --ct-accent: var(--vscode-textLink-foreground, #3794ff);
+    --ct-toast-bg: var(--vscode-notificationInformationBackground, #04395e);
+    --ct-toast-fg: var(--vscode-notificationInformationForeground, #fff);
+  }
+  body[data-theme="green"] {
+    --ct-bg: #0d1512; --ct-fg: #d1e3d8;
+    --ct-card-bg: #13201a; --ct-border: #23402f;
+    --ct-btn-bg: #1f884d; --ct-btn-fg: #ffffff; --ct-btn-hover: #27a35d;
+    --ct-btn2-bg: #1d2b23; --ct-btn2-fg: #d1e3d8; --ct-btn2-hover: #2a3d31;
+    --ct-dd-bg: #182a20; --ct-dd-fg: #d1e3d8;
+    --ct-hover: #1b3326; --ct-active: #166534;
+    --ct-detail-bg: #0a120e; --ct-th-bg: #101c16;
+    --ct-accent: #4ade80;
+    --ct-toast-bg: #14532d; --ct-toast-fg: #dcfce7;
+  }
+  body[data-theme="purple"] {
+    --ct-bg: #14101d; --ct-fg: #e0d8ee;
+    --ct-card-bg: #1d1729; --ct-border: #372a52;
+    --ct-btn-bg: #7c3aed; --ct-btn-fg: #ffffff; --ct-btn-hover: #8b5cf6;
+    --ct-btn2-bg: #262033; --ct-btn2-fg: #e0d8ee; --ct-btn2-hover: #332a44;
+    --ct-dd-bg: #221b30; --ct-dd-fg: #e0d8ee;
+    --ct-hover: #2b2340; --ct-active: #4c1d95;
+    --ct-detail-bg: #100c17; --ct-th-bg: #181224;
+    --ct-accent: #a78bfa;
+    --ct-toast-bg: #3b0764; --ct-toast-fg: #ede9fe;
+  }
+  body[data-theme="orange"] {
+    --ct-bg: #1a140d; --ct-fg: #ead9c4;
+    --ct-card-bg: #241c11; --ct-border: #4a3a1f;
+    --ct-btn-bg: #b45309; --ct-btn-fg: #ffffff; --ct-btn-hover: #d97706;
+    --ct-btn2-bg: #2b2317; --ct-btn2-fg: #ead9c4; --ct-btn2-hover: #3a2f1e;
+    --ct-dd-bg: #271f12; --ct-dd-fg: #ead9c4;
+    --ct-hover: #33291a; --ct-active: #78350f;
+    --ct-detail-bg: #140f09; --ct-th-bg: #1d1710;
+    --ct-accent: #fbbf24;
+    --ct-toast-bg: #78350f; --ct-toast-fg: #fef3c7;
+  }
+  body[data-theme="red"] {
+    --ct-bg: #1a0f10; --ct-fg: #ecd8d8;
+    --ct-card-bg: #241517; --ct-border: #4a2528;
+    --ct-btn-bg: #b91c1c; --ct-btn-fg: #ffffff; --ct-btn-hover: #dc2626;
+    --ct-btn2-bg: #2b1d1e; --ct-btn2-fg: #ecd8d8; --ct-btn2-hover: #3a2628;
+    --ct-dd-bg: #27181a; --ct-dd-fg: #ecd8d8;
+    --ct-hover: #332123; --ct-active: #7f1d1d;
+    --ct-detail-bg: #140b0c; --ct-th-bg: #1d1213;
+    --ct-accent: #f87171;
+    --ct-toast-bg: #7f1d1d; --ct-toast-fg: #fee2e2;
+  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: var(--vscode-font-family, sans-serif);
     font-size: var(--vscode-font-size, 13px);
-    color: var(--vscode-foreground);
+    color: var(--ct-fg);
+    background: var(--ct-bg);
     padding: 16px 20px 40px;
   }
   .header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
@@ -29,29 +91,29 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
   select, button {
     font-family: inherit;
     font-size: var(--vscode-font-size, 13px);
-    color: var(--vscode-button-foreground, inherit);
-    background: var(--vscode-button-background, #0e639c);
-    border: 1px solid var(--vscode-button-border, transparent);
+    color: var(--ct-btn-fg);
+    background: var(--ct-btn-bg);
+    border: 1px solid transparent;
     border-radius: var(--vscode-border-radius, 2px);
     padding: 4px 12px;
     cursor: pointer;
   }
   select {
-    background: var(--vscode-dropdown-background, #3c3c3c);
-    color: var(--vscode-dropdown-foreground, inherit);
-    border: 1px solid var(--vscode-dropdown-border, transparent);
+    background: var(--ct-dd-bg);
+    color: var(--ct-dd-fg);
+    border: 1px solid var(--ct-border);
     padding: 3px 6px;
   }
   button.secondary {
-    background: var(--vscode-button-secondaryBackground, #3a3d41);
-    color: var(--vscode-button-secondaryForeground, inherit);
+    background: var(--ct-btn2-bg);
+    color: var(--ct-btn2-fg);
   }
-  button:hover { background: var(--vscode-button-hoverBackground, #1177bb); }
-  button.secondary:hover { background: var(--vscode-button-secondaryHoverBackground, #45494e); }
+  button:hover { background: var(--ct-btn-hover); }
+  button.secondary:hover { background: var(--ct-btn2-hover); }
   .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin-bottom: 18px; }
   .card {
-    background: var(--vscode-editorWidget-background, rgba(128,128,128,0.1));
-    border: 1px solid var(--vscode-widget-border, transparent);
+    background: var(--ct-card-bg);
+    border: 1px solid var(--ct-border);
     border-radius: 6px;
     padding: 10px 12px;
   }
@@ -63,20 +125,20 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
   th, td { text-align: left; padding: 6px 10px; white-space: nowrap; }
   th {
     font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px;
-    opacity: 0.7; border-bottom: 1px solid var(--vscode-widget-border, rgba(128,128,128,0.3));
-    position: sticky; top: 0; background: var(--vscode-sideBar-background, inherit);
+    opacity: 0.7; border-bottom: 1px solid var(--ct-border);
+    position: sticky; top: 0; background: var(--ct-th-bg);
   }
   td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   tr.session-row { cursor: pointer; }
-  tr.session-row:hover td { background: var(--vscode-list-hoverBackground, rgba(128,128,128,0.1)); }
-  tr.session-row.open td { background: var(--vscode-list-activeSelectionBackground, rgba(128,128,128,0.2)); }
+  tr.session-row:hover td { background: var(--ct-hover); }
+  tr.session-row.open td { background: var(--ct-active); }
   .sid { font-family: var(--vscode-editor-font-family, monospace); font-size: 11px; opacity: 0.6; }
   .title-cell { max-width: 340px; overflow: hidden; text-overflow: ellipsis; }
   .models { font-size: 11px; opacity: 0.8; }
   .chev { display: inline-block; width: 12px; opacity: 0.7; transition: transform 0.12s; }
   tr.open .chev { transform: rotate(90deg); }
   tr.detail-row td {
-    background: var(--vscode-editor-background, rgba(0,0,0,0.15));
+    background: var(--ct-detail-bg);
     padding: 8px 12px 12px 34px;
     white-space: normal;
   }
@@ -88,8 +150,8 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
   .footer { margin-top: 20px; font-size: 11px; opacity: 0.5; text-align: right; }
   .toast {
     position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
-    background: var(--vscode-notificationInformationBackground, #04395e);
-    color: var(--vscode-notificationInformationForeground, #fff);
+    background: var(--ct-toast-bg);
+    color: var(--ct-toast-fg);
     padding: 6px 16px; border-radius: 4px; font-size: 12px;
     opacity: 0; transition: opacity 0.2s; pointer-events: none;
   }
