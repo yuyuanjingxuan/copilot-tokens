@@ -1,9 +1,12 @@
-# copilot-tokens
+<p align="center">
+  <img src="docs/logo.png" alt="copilot-tokens" width="560">
+</p>
 
 > [Chinese (Simplified) README](README.zh-CN.md)
 
 [![CI](https://github.com/yuyuanjingxuan/copilot-tokens/actions/workflows/ci.yml/badge.svg)](https://github.com/yuyuanjingxuan/copilot-tokens/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/Python-3.9--3.13-blue.svg)](https://www.python.org/)
+[![VS Code](https://img.shields.io/badge/VS_Code-%E2%89%A51.85-blue.svg)](https://code.visualstudio.com/)
 [![Dependencies](https://img.shields.io/badge/dependencies-none-brightgreen.svg)]()
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -95,9 +98,13 @@ Session a8ba8abd-…
 
 A native VS Code extension wraps the same parser in a themed webview panel —
 summary cards, a per-session table, and expandable per-request detail. It
-follows your light/dark theme and supports English / Chinese (auto-detected).
+follows your light/dark theme, supports English / Chinese (auto-detected),
+and offers five full-page color themes (default / green / purple / orange /
+red, persisted in settings).
 
 ![Extension preview](docs/extension-preview.png)
+
+![Extension color themes](docs/extension-themes.png)
 
 ```
 extension/
@@ -109,6 +116,13 @@ extension/
 ├── package.json
 └── tsconfig.json
 ```
+
+### Install (.vsix)
+
+1. Download `copilot-tokens-x.y.z.vsix` from the
+   [latest release](https://github.com/yuyuanjingxuan/copilot-tokens/releases)
+2. <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> → **Extensions: Install from VSIX…** → pick the file
+3. Run the command **Copilot Tokens: Show Usage**
 
 ### Try it (F5)
 
@@ -131,10 +145,11 @@ extension/
 |---|---|---|
 | `copilotTokens.days` | `7` | Default day window when opening the panel |
 | `copilotTokens.language` | `auto` | UI language: `auto` / `en` / `zh-CN` |
-| `copilotTokens.theme` | `default` | Accent color: `default` / `green` / `purple` / `orange` / `red` |
+| `copilotTokens.theme` | `default` | Panel color theme: `default` / `green` / `purple` / `orange` / `red` |
 
-> The extension is a development build (not yet published to the Marketplace).
-> The Python CLI remains the zero-install option; both share identical parsing.
+> The extension is distributed as a `.vsix` via GitHub Releases (not yet
+> published to the Marketplace). The Python CLI remains the zero-install
+> option; both share identical parsing.
 
 ## Data sources
 

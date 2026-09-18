@@ -43,3 +43,12 @@ jobs:
 
       - name: Compile TypeScript
         run: npm run compile
+
+      - name: Package .vsix (validate manifest)
+        run: npm run package
+
+      - name: Upload .vsix artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: copilot-tokens-vsix
+          path: extension/*.vsix

@@ -1,9 +1,12 @@
-# copilot-tokens
+<p align="center">
+  <img src="docs/logo.png" alt="copilot-tokens" width="560">
+</p>
 
 > [English README](README.md)
 
 [![CI](https://github.com/yuyuanjingxuan/copilot-tokens/actions/workflows/ci.yml/badge.svg)](https://github.com/yuyuanjingxuan/copilot-tokens/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/Python-3.9--3.13-blue.svg)](https://www.python.org/)
+[![VS Code](https://img.shields.io/badge/VS_Code-%E2%89%A51.85-blue.svg)](https://code.visualstudio.com/)
 [![Dependencies](https://img.shields.io/badge/dependencies-none-brightgreen.svg)]()
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -91,9 +94,12 @@ a8ba8abd 09-18 18:34      1     9,360      157        0     9,517  qwen3.8-27b  
 
 一个原生 VS Code 扩展，把同样的解析逻辑包装成跟随主题的 Webview 面板——
 汇总卡片、按会话的表格、可展开的每请求明细。自动适配浅色 / 深色主题，
-界面支持英文 / 中文（自动检测）。
+界面支持英文 / 中文（自动检测），并提供 5 种整页配色
+（default / green / purple / orange / red，选择会持久化到设置）。
 
 ![扩展预览](docs/extension-preview.png)
+
+![扩展配色主题](docs/extension-themes.png)
 
 ```
 extension/
@@ -105,6 +111,13 @@ extension/
 ├── package.json
 └── tsconfig.json
 ```
+
+### 安装（.vsix）
+
+1. 从 [最新 Release](https://github.com/yuyuanjingxuan/copilot-tokens/releases)
+   下载 `copilot-tokens-x.y.z.vsix`
+2. <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> → **Extensions: Install from VSIX…** → 选择该文件
+3. 运行命令 **Copilot Tokens: Show Usage**
 
 ### 试用（F5）
 
@@ -127,10 +140,10 @@ extension/
 |---|---|---|
 | `copilotTokens.days` | `7` | 打开面板时的默认天数窗口 |
 | `copilotTokens.language` | `auto` | 界面语言：`auto` / `en` / `zh-CN` |
-| `copilotTokens.theme` | `default` | 强调色：`default` / `green` / `purple` / `orange` / `red` |
+| `copilotTokens.theme` | `default` | 面板配色：`default` / `green` / `purple` / `orange` / `red` |
 
-> 扩展目前是开发版（尚未发布到 Marketplace）。Python CLI 仍是零安装方案，
-> 两者解析逻辑完全一致。
+> 扩展以 `.vsix` 形式通过 GitHub Releases 分发（尚未发布到 Marketplace）。
+> Python CLI 仍是零安装方案，两者解析逻辑完全一致。
 
 ## 数据源
 
