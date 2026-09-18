@@ -97,6 +97,8 @@ A native VS Code extension wraps the same parser in a themed webview panel —
 summary cards, a per-session table, and expandable per-request detail. It
 follows your light/dark theme and supports English / Chinese (auto-detected).
 
+![Extension preview](docs/extension-preview.png)
+
 ```
 extension/
 ├── src/
