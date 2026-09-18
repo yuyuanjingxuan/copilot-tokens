@@ -87,6 +87,48 @@ a8ba8abd 09-18 18:34      1     9,360      157        0     9,517  qwen3.8-27b  
                              9,360     157        0  合计
 ```
 
+## VS Code 扩展（可选）
+
+一个原生 VS Code 扩展，把同样的解析逻辑包装成跟随主题的 Webview 面板——
+汇总卡片、按会话的表格、可展开的每请求明细。自动适配浅色 / 深色主题，
+界面支持英文 / 中文（自动检测）。
+
+```
+extension/
+├── src/
+│   ├── extension.ts   # 命令 + Webview 面板
+│   ├── parser.ts      # 日志发现与解析（与 CLI 相同逻辑）
+│   ├── i18n.ts        # 英文 / 中文字符串
+│   └── webview.ts     # 面板 HTML/CSS/JS
+├── package.json
+└── tsconfig.json
+```
+
+### 试用（F5）
+
+1. 用 VS Code 打开 `extension/` 文件夹
+2. 运行 `npm install`
+3. 按 <kbd>F5</kbd>（Run Extension）——会打开第二个 VS Code 窗口
+4. 在该窗口中运行命令 **Copilot Tokens: Show Usage**
+
+### 命令
+
+| 命令 | 作用 |
+|---|---|
+| `Copilot Tokens: Show Usage` | 打开用量面板 |
+| `Copilot Tokens: Refresh` | 重新扫描日志 |
+| `Copilot Tokens: Export JSON` | 将当前报告保存为 JSON 文件 |
+
+### 设置
+
+| 设置 | 默认值 | 说明 |
+|---|---|---|
+| `copilotTokens.days` | `7` | 打开面板时的默认天数窗口 |
+| `copilotTokens.language` | `auto` | 界面语言：`auto` / `en` / `zh-CN` |
+
+> 扩展目前是开发版（尚未发布到 Marketplace）。Python CLI 仍是零安装方案，
+> 两者解析逻辑完全一致。
+
 ## 数据源
 
 脚本自动扫描以下位置（兼容新旧两种布局）：

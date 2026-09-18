@@ -91,6 +91,48 @@ Session a8ba8abd-…
                               9,360     157        0  Total
 ```
 
+## VS Code extension (optional)
+
+A native VS Code extension wraps the same parser in a themed webview panel —
+summary cards, a per-session table, and expandable per-request detail. It
+follows your light/dark theme and supports English / Chinese (auto-detected).
+
+```
+extension/
+├── src/
+│   ├── extension.ts   # command + webview panel
+│   ├── parser.ts      # log discovery & parsing (same logic as the CLI)
+│   ├── i18n.ts        # en / zh-CN strings
+│   └── webview.ts     # panel HTML/CSS/JS
+├── package.json
+└── tsconfig.json
+```
+
+### Try it (F5)
+
+1. Open the `extension/` folder in VS Code
+2. Run `npm install`
+3. Press <kbd>F5</kbd> (Run Extension) — a second VS Code window opens
+4. In that window, run the command **Copilot Tokens: Show Usage**
+
+### Commands
+
+| Command | Action |
+|---|---|
+| `Copilot Tokens: Show Usage` | Open the usage panel |
+| `Copilot Tokens: Refresh` | Re-scan the logs |
+| `Copilot Tokens: Export JSON` | Save the current report as a JSON file |
+
+### Settings
+
+| Setting | Default | Description |
+|---|---|---|
+| `copilotTokens.days` | `7` | Default day window when opening the panel |
+| `copilotTokens.language` | `auto` | UI language: `auto` / `en` / `zh-CN` |
+
+> The extension is a development build (not yet published to the Marketplace).
+> The Python CLI remains the zero-install option; both share identical parsing.
+
 ## Data sources
 
 The script auto-discovers logs in both layouts (new and legacy):

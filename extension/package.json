@@ -1,0 +1,63 @@
+{
+  "name": "copilot-tokens",
+  "displayName": "Copilot Tokens",
+  "description": "Token usage tracker for VS Code Copilot Chat — parses built-in debug logs and shows per-session input/output tokens, models, and latency.",
+  "version": "0.1.0",
+  "publisher": "yuyuanjingxuan",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "copilotTokens.show",
+        "title": "Copilot Tokens: Show Usage"
+      },
+      {
+        "command": "copilotTokens.refresh",
+        "title": "Copilot Tokens: Refresh"
+      },
+      {
+        "command": "copilotTokens.exportJson",
+        "title": "Copilot Tokens: Export JSON"
+      }
+    ],
+    "configuration": {
+      "title": "Copilot Tokens",
+      "properties": {
+        "copilotTokens.days": {
+          "type": "number",
+          "default": 7,
+          "minimum": 1,
+          "description": "Default number of days to include when showing usage."
+        },
+        "copilotTokens.language": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "en",
+            "zh-CN"
+          ],
+          "default": "auto",
+          "description": "UI language. 'auto' follows the VS Code display language."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.4.0"
+  }
+}

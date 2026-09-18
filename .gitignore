@@ -9,6 +9,8 @@ venv/
 *.json
 usage*.txt
 !examples/*.json
+!extension/package.json
+!extension/tsconfig.json
 
 # Editor / OS
 .vscode/
