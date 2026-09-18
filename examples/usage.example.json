@@ -1,0 +1,38 @@
+[
+  {
+    "sessionId": "00000000-0000-0000-0000-000000000000",
+    "title": "Example session title (redacted)",
+    "firstTs": 1789743493930,
+    "lastTs": 1789751438738,
+    "vscodeVersion": "1.138.0",
+    "copilotVersion": "0.66.0",
+    "requests": 2,
+    "inputTokens": 73413,
+    "outputTokens": 463,
+    "cachedTokens": 0,
+    "totalTokens": 73876,
+    "models": {
+      "example-model": 2
+    },
+    "details": [
+      {
+        "ts": 1789746706357,
+        "durMs": 33534,
+        "model": "example-model",
+        "inputTokens": 64053,
+        "outputTokens": 306,
+        "cachedTokens": 0,
+        "responseId": "00000000-0000-0000-0000-000000000000"
+      },
+      {
+        "ts": 1789746800000,
+        "durMs": 12000,
+        "model": "example-model",
+        "inputTokens": 9360,
+        "outputTokens": 157,
+        "cachedTokens": 0,
+        "responseId": "11111111-1111-1111-1111-111111111111"
+      }
+    ]
+  }
+]

@@ -1,0 +1,36 @@
+---
+name: Missing data / format change
+about: Script finds no data or fields don't match after a VS Code upgrade
+title: ""
+labels: bug
+---
+
+## Environment
+
+- OS:
+- VS Code version:
+- Copilot Chat version (visible in script output):
+- Python version:
+
+## Symptom
+
+- [ ] No sessions found at all
+- [ ] Sessions exist but tokens are 0
+- [ ] Field parsing mismatch (other, please describe):
+
+## Log sample (redacted)
+
+Copy **one** `llm_request` event from your `main.jsonl` and paste it below.
+⚠️ Remove fields that may contain personal content first (`inputMessages`,
+`systemPromptFile`, `toolsFile`, etc.) — keep only structural fields like
+`ts` / `dur` / `attrs.model` / `attrs.inputTokens` / `attrs.outputTokens`.
+
+```json
+{ "type": "llm_request", "ts": 0, "dur": 0, "attrs": { "model": "example-model" } }
+```
+
+## Log file location
+
+```
+(paste the full path to main.jsonl — do NOT upload the file itself)
+```

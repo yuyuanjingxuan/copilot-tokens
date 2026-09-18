@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Exported data (may contain session titles and other personal content)
+*.json
+usage*.txt
+!examples/*.json
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
