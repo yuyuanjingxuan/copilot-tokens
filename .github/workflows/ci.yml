@@ -26,6 +26,14 @@ jobs:
       - name: Smoke test (fixture logs)
         run: python tests/test_smoke.py
 
+      - name: Coverage
+        run: |
+          python -m pip install --quiet coverage
+          python -m coverage run copilot_tokens.py --root tests/fixtures/user --all > /dev/null
+          python -m coverage run --append copilot_tokens.py --root tests/fixtures/user --all --json > /dev/null
+          python -m coverage run --append copilot_tokens.py --root tests/fixtures/user --session test-sid-0001 > /dev/null
+          python -m coverage report -m
+
   extension:
     runs-on: ubuntu-latest
     defaults:
