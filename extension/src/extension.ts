@@ -20,10 +20,11 @@ function buildReport(): UsageReport {
   return report;
 }
 
-function pushReport() {
+function pushReport(): UsageReport | undefined {
   if (!panel) return;
   const report = buildReport();
   panel.webview.postMessage({ type: 'report', report });
+  return report;
 }
 
 function ensurePanel(): vscode.WebviewPanel {
@@ -51,9 +52,18 @@ function ensurePanel(): vscode.WebviewPanel {
         vscode.workspace.getConfiguration('copilotTokens').update('theme', msg.theme, true);
         pushReport();
         break;
-      case 'refresh':
-        pushReport();
+      case 'refresh': {
+        const p = panel;
+        const report = pushReport();
+        if (p && report) {
+          const s = getStrings(getLanguage());
+          p.webview.postMessage({
+            type: 'toast',
+            text: `${s.refreshed} · ${s.sessions} ${report.totals.sessions} · ${s.total} ${report.totals.totalTokens.toLocaleString()}`,
+          });
+        }
         break;
+      }
       case 'export':
         void exportJson();
         break;

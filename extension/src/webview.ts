@@ -26,7 +26,7 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
     --ct-dd-bg: var(--vscode-dropdown-background, #3c3c3c);
     --ct-dd-fg: var(--vscode-dropdown-foreground, inherit);
     --ct-hover: var(--vscode-list-hoverBackground, rgba(128,128,128,0.1));
-    --ct-active: var(--vscode-list-activeSelectionBackground, rgba(128,128,128,0.2));
+    --ct-active: var(--vscode-list-inactiveSelectionBackground, rgba(128,128,128,0.25));
     --ct-detail-bg: var(--vscode-editor-background, rgba(0,0,0,0.15));
     --ct-th-bg: var(--vscode-sideBar-background, inherit);
     --ct-accent: var(--vscode-textLink-foreground, #3794ff);
@@ -39,7 +39,7 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
     --ct-btn-bg: #1f884d; --ct-btn-fg: #ffffff; --ct-btn-hover: #27a35d;
     --ct-btn2-bg: #1d2b23; --ct-btn2-fg: #d1e3d8; --ct-btn2-hover: #2a3d31;
     --ct-dd-bg: #182a20; --ct-dd-fg: #d1e3d8;
-    --ct-hover: #1b3326; --ct-active: #166534;
+    --ct-hover: #1b3326; --ct-active: #244634;
     --ct-detail-bg: #0a120e; --ct-th-bg: #101c16;
     --ct-accent: #4ade80;
     --ct-toast-bg: #14532d; --ct-toast-fg: #dcfce7;
@@ -50,7 +50,7 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
     --ct-btn-bg: #7c3aed; --ct-btn-fg: #ffffff; --ct-btn-hover: #8b5cf6;
     --ct-btn2-bg: #262033; --ct-btn2-fg: #e0d8ee; --ct-btn2-hover: #332a44;
     --ct-dd-bg: #221b30; --ct-dd-fg: #e0d8ee;
-    --ct-hover: #2b2340; --ct-active: #4c1d95;
+    --ct-hover: #2b2340; --ct-active: #3a2f55;
     --ct-detail-bg: #100c17; --ct-th-bg: #181224;
     --ct-accent: #a78bfa;
     --ct-toast-bg: #3b0764; --ct-toast-fg: #ede9fe;
@@ -61,7 +61,7 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
     --ct-btn-bg: #b45309; --ct-btn-fg: #ffffff; --ct-btn-hover: #d97706;
     --ct-btn2-bg: #2b2317; --ct-btn2-fg: #ead9c4; --ct-btn2-hover: #3a2f1e;
     --ct-dd-bg: #271f12; --ct-dd-fg: #ead9c4;
-    --ct-hover: #33291a; --ct-active: #78350f;
+    --ct-hover: #33291a; --ct-active: #4a3a1f;
     --ct-detail-bg: #140f09; --ct-th-bg: #1d1710;
     --ct-accent: #fbbf24;
     --ct-toast-bg: #78350f; --ct-toast-fg: #fef3c7;
@@ -72,7 +72,7 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
     --ct-btn-bg: #b91c1c; --ct-btn-fg: #ffffff; --ct-btn-hover: #dc2626;
     --ct-btn2-bg: #2b1d1e; --ct-btn2-fg: #ecd8d8; --ct-btn2-hover: #3a2628;
     --ct-dd-bg: #27181a; --ct-dd-fg: #ecd8d8;
-    --ct-hover: #332123; --ct-active: #7f1d1d;
+    --ct-hover: #332123; --ct-active: #4a2a2d;
     --ct-detail-bg: #140b0c; --ct-th-bg: #1d1213;
     --ct-accent: #f87171;
     --ct-toast-bg: #7f1d1d; --ct-toast-fg: #fee2e2;

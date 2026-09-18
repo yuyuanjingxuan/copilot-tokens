@@ -26,6 +26,7 @@ export interface Strings {
   exportFailed: string;
   version: string;
   theme: string;
+  refreshed: string;
 }
 
 const en: Strings = {
@@ -54,6 +55,7 @@ const en: Strings = {
   exportFailed: 'Export failed',
   version: 'Version',
   theme: 'Theme',
+  refreshed: 'Updated',
 };
 
 const zh: Strings = {
@@ -82,6 +84,7 @@ const zh: Strings = {
   exportFailed: '导出失败',
   version: '版本',
   theme: '配色',
+  refreshed: '已更新',
 };
 
 export function getStrings(lang: Lang): Strings {
