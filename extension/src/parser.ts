@@ -44,6 +44,7 @@ export interface SessionSummary {
 export interface UsageReport {
   generatedAt: number;
   days: number | null;   // null = all
+  theme: string;
   sessions: SessionSummary[];
   totals: {
     sessions: number;
@@ -245,6 +246,7 @@ export function summarize(sessions: Session[], days: number | null): UsageReport
   return {
     generatedAt: Date.now(),
     days,
+    theme: 'default',
     sessions: summaries,
     totals: {
       sessions: summaries.length,

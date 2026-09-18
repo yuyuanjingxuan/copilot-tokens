@@ -131,6 +131,7 @@ extension/
 |---|---|---|
 | `copilotTokens.days` | `7` | Default day window when opening the panel |
 | `copilotTokens.language` | `auto` | UI language: `auto` / `en` / `zh-CN` |
+| `copilotTokens.theme` | `default` | Accent color: `default` / `green` / `purple` / `orange` / `red` |
 
 > The extension is a development build (not yet published to the Marketplace).
 > The Python CLI remains the zero-install option; both share identical parsing.

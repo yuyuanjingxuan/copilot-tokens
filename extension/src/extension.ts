@@ -5,6 +5,7 @@ import { webviewHtml } from './webview';
 
 let panel: vscode.WebviewPanel | undefined;
 let currentDays: number | null = 7;
+let currentTheme: string = 'default';
 
 function getLanguage(): Lang {
   const cfg = vscode.workspace.getConfiguration('copilotTokens');
@@ -14,7 +15,9 @@ function getLanguage(): Lang {
 
 function buildReport(): UsageReport {
   const sessions = loadSessions(undefined, currentDays);
-  return summarize(sessions, currentDays);
+  const report = summarize(sessions, currentDays);
+  report.theme = currentTheme;
+  return report;
 }
 
 function pushReport() {
@@ -41,6 +44,11 @@ function ensurePanel(): vscode.WebviewPanel {
     switch (msg.type) {
       case 'setDays':
         currentDays = msg.days;
+        pushReport();
+        break;
+      case 'setTheme':
+        currentTheme = msg.theme;
+        vscode.workspace.getConfiguration('copilotTokens').update('theme', msg.theme, true);
         pushReport();
         break;
       case 'refresh':
@@ -80,6 +88,7 @@ async function exportJson(): Promise<void> {
 export function activate(context: vscode.ExtensionContext): void {
   const cfg = vscode.workspace.getConfiguration('copilotTokens');
   currentDays = cfg.get<number>('days', 7);
+  currentTheme = cfg.get<string>('theme', 'default');
 
   context.subscriptions.push(
     vscode.commands.registerCommand('copilotTokens.show', () => {

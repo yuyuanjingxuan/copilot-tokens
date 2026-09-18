@@ -46,6 +46,18 @@
           ],
           "default": "auto",
           "description": "UI language. 'auto' follows the VS Code display language."
+        },
+        "copilotTokens.theme": {
+          "type": "string",
+          "enum": [
+            "default",
+            "green",
+            "purple",
+            "orange",
+            "red"
+          ],
+          "default": "default",
+          "description": "Accent color theme for the usage panel."
         }
       }
     }

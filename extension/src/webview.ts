@@ -11,7 +11,11 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${cspSource} 'unsafe-inline'; script-src 'unsafe-inline';">
 <style>
-  :root { color-scheme: light dark; }
+  :root { color-scheme: light dark; --ct-accent: var(--vscode-textLink-foreground, #3794ff); }
+  body[data-theme="green"] { --ct-accent: #3fb950; }
+  body[data-theme="purple"] { --ct-accent: #a371f7; }
+  body[data-theme="orange"] { --ct-accent: #d29922; }
+  body[data-theme="red"] { --ct-accent: #f85149; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: var(--vscode-font-family, sans-serif);
@@ -53,7 +57,8 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
   }
   .card .label { font-size: 11px; opacity: 0.7; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
   .card .value { font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
-  .card.accent .value { color: var(--vscode-textLink-foreground, #3794ff); }
+  .card.accent { border-left: 3px solid var(--ct-accent); }
+  .card.accent .value { color: var(--ct-accent); }
   table { width: 100%; border-collapse: collapse; }
   th, td { text-align: left; padding: 6px 10px; white-space: nowrap; }
   th {
@@ -101,6 +106,14 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
         <option value="30">30</option>
         <option value="90">90</option>
         <option value="all">${strings.all}</option>
+      </select>
+      <label for="theme">${strings.theme}</label>
+      <select id="theme">
+        <option value="default">Default</option>
+        <option value="green">Green</option>
+        <option value="purple">Purple</option>
+        <option value="orange">Orange</option>
+        <option value="red">Red</option>
       </select>
       <button id="refresh" class="secondary" title="${strings.refresh}">&#x21bb; ${strings.refresh}</button>
       <button id="export" class="secondary">${strings.exportJson}</button>
@@ -219,6 +232,8 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
       report = msg.report;
       openSid = null;
       document.getElementById('days').value = String(msg.report.days ?? 'all');
+      document.getElementById('theme').value = msg.report.theme || 'default';
+      document.body.dataset.theme = msg.report.theme || 'default';
       render();
     } else if (msg.type === 'toast') {
       toast(msg.text);
@@ -228,6 +243,11 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
   document.getElementById('days').addEventListener('change', e => {
     const v = e.target.value;
     send({ type: 'setDays', days: v === 'all' ? null : parseInt(v, 10) });
+  });
+  document.getElementById('theme').addEventListener('change', e => {
+    const v = e.target.value;
+    document.body.dataset.theme = v;
+    send({ type: 'setTheme', theme: v });
   });
   document.getElementById('refresh').addEventListener('click', () => send({ type: 'refresh' }));
   document.getElementById('export').addEventListener('click', () => send({ type: 'export' }));

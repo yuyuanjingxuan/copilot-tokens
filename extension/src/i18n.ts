@@ -25,6 +25,7 @@ export interface Strings {
   exportDone: string;
   exportFailed: string;
   version: string;
+  theme: string;
 }
 
 const en: Strings = {
@@ -52,6 +53,7 @@ const en: Strings = {
   exportDone: 'JSON exported',
   exportFailed: 'Export failed',
   version: 'Version',
+  theme: 'Theme',
 };
 
 const zh: Strings = {
@@ -79,6 +81,7 @@ const zh: Strings = {
   exportDone: 'JSON 已导出',
   exportFailed: '导出失败',
   version: '版本',
+  theme: '配色',
 };
 
 export function getStrings(lang: Lang): Strings {

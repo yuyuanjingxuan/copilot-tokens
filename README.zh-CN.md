@@ -127,6 +127,7 @@ extension/
 |---|---|---|
 | `copilotTokens.days` | `7` | 打开面板时的默认天数窗口 |
 | `copilotTokens.language` | `auto` | 界面语言：`auto` / `en` / `zh-CN` |
+| `copilotTokens.theme` | `default` | 强调色：`default` / `green` / `purple` / `orange` / `red` |
 
 > 扩展目前是开发版（尚未发布到 Marketplace）。Python CLI 仍是零安装方案，
 > 两者解析逻辑完全一致。
