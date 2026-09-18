@@ -38,6 +38,7 @@ export interface SessionSummary {
   cachedTokens: number;
   totalTokens: number;
   models: { model: string; count: number }[];
+  requests: LlmRequest[];
 }
 
 export interface UsageReport {
@@ -237,6 +238,7 @@ export function summarize(sessions: Session[], days: number | null): UsageReport
       models: [...modelCounts.entries()]
         .map(([model, count]) => ({ model, count }))
         .sort((a, b) => b.count - a.count),
+      requests: s.requests,
     };
   });
 

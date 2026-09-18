@@ -190,7 +190,7 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
   }
 
   function detailRow(s) {
-    const rows = s.requests.map(r =>
+    const rows = (s.requests || []).map(r =>
       '<tr><td>' + fmtTime(r.ts) + '</td><td>' + esc(r.model || '?') + '</td>' +
       '<td class="num">' + fmt(r.inputTokens) + '</td><td class="num">' + fmt(r.outputTokens) + '</td>' +
       '<td class="num">' + fmt(r.cachedTokens) + '</td><td class="num">' + (r.durMs ? (r.durMs / 1000).toFixed(1) + ' s' : '-') + '</td></tr>'
