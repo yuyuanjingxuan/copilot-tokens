@@ -332,9 +332,8 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
   document.getElementById('refresh').addEventListener('click', () => send({ type: 'refresh' }));
   document.getElementById('export').addEventListener('click', () => send({ type: 'export' }));
 
-  // Signal that the page script is loaded; the extension pushes the first
-  // report in response (an earlier push would be lost before this listener
-  // exists).
+  // Tell the extension the page script is ready so it can push the first
+  // report now that the 'message' listener above is registered.
   send({ type: 'ready' });
 </script>
 </body>

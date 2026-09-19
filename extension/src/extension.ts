@@ -10,26 +10,6 @@ let refreshTimer: NodeJS.Timeout | undefined;
 let currentDays: number | null = 7;
 let currentTheme: string = 'default';
 
-function sendTo(webview: vscode.Webview | undefined, msg: unknown): void {
-  if (webview) void webview.postMessage(msg);
-}
-
-/**
- * Wire a webview. When the page script finishes loading it sends
- * {type:'ready'}; we push a fresh report in response so the first paint
- * has data. Reports are also pushed unconditionally on every refresh, so
- * a missed handshake can never leave a view blank.
- */
-function wireWebview(webview: vscode.Webview): void {
-  webview.onDidReceiveMessage(msg => {
-    if (msg.type === 'ready') {
-      void pushReport();
-      return;
-    }
-    handleMessage(msg);
-  });
-}
-
 function getLanguage(): Lang {
   const cfg = vscode.workspace.getConfiguration('copilotTokens');
   const setting = cfg.get<string>('language', 'auto');
@@ -45,10 +25,26 @@ async function buildReport(): Promise<UsageReport> {
 
 async function pushReport(): Promise<UsageReport | undefined> {
   const report = await buildReport();
-  sendTo(panel?.webview, { type: 'report', report });
-  sendTo(view?.webview, { type: 'report', report });
+  if (panel) panel.webview.postMessage({ type: 'report', report });
+  if (view) view.webview.postMessage({ type: 'report', report });
   updateStatusBar(report);
   return report;
+}
+
+/**
+ * Wire a webview's message handler. When the page script finishes loading it
+ * sends {type:'ready'}; we push a fresh report in response so the first paint
+ * has data. Reports are also pushed unconditionally on every refresh, so a
+ * missed handshake can never leave a view blank.
+ */
+function wireWebview(webview: vscode.Webview): void {
+  webview.onDidReceiveMessage(msg => {
+    if (msg.type === 'ready') {
+      void pushReport();
+      return;
+    }
+    handleMessage(msg);
+  });
 }
 
 function updateStatusBar(report: UsageReport): void {
@@ -79,8 +75,8 @@ function handleMessage(msg: any): void {
         if (report) {
           const s = getStrings(getLanguage());
           const text = `${s.refreshed} · ${s.sessions} ${report.totals.sessions} · ${s.total} ${report.totals.totalTokens.toLocaleString()}`;
-          sendTo(panel?.webview, { type: 'toast', text });
-          sendTo(view?.webview, { type: 'toast', text });
+          panel?.webview.postMessage({ type: 'toast', text });
+          view?.webview.postMessage({ type: 'toast', text });
         }
       });
       break;
@@ -118,14 +114,12 @@ function ensurePanel(): vscode.WebviewPanel {
     vscode.ViewColumn.One,
     { enableScripts: true, retainContextWhenHidden: true },
   );
-  const webview = panel.webview;
-  webview.html = webviewHtml(strings, webview.cspSource);
+  panel.webview.html = webviewHtml(strings, panel.webview.cspSource);
 
-  wireWebview(webview);
+  wireWebview(panel.webview);
 
-  panel.onDidDispose(() => {
-    panel = undefined;
-  });
+  panel.onDidDispose(() => { panel = undefined; });
+  pushReport();
   return panel;
 }
 
@@ -143,26 +137,30 @@ async function exportJson(): Promise<void> {
     });
     if (!uri) return;
     await vscode.workspace.fs.writeFile(uri, Buffer.from(JSON.stringify(report, null, 2), 'utf8'));
-    sendTo(panel?.webview, { type: 'toast', text: strings.exportDone });
-    sendTo(view?.webview, { type: 'toast', text: strings.exportDone });
+    panel?.webview.postMessage({ type: 'toast', text: strings.exportDone });
   } catch {
-    sendTo(panel?.webview, { type: 'toast', text: strings.exportFailed });
-    sendTo(view?.webview, { type: 'toast', text: strings.exportFailed });
+    panel?.webview.postMessage({ type: 'toast', text: strings.exportFailed });
   }
 }
 
 class TokensViewProvider implements vscode.WebviewViewProvider {
   resolveWebviewView(webviewView: vscode.WebviewView): void {
-    view = webviewView;
+    // WebviewView's webview already exists here and enableScripts defaults to
+    // false: static HTML renders but <script> is silently NOT executed. It
+    // must be enabled on the options BEFORE assigning html.
+    webviewView.webview.options = { enableScripts: true };
     const strings = getStrings(getLanguage());
     webviewView.webview.html = webviewHtml(strings, webviewView.webview.cspSource);
     wireWebview(webviewView.webview);
     webviewView.onDidDispose(() => {
       if (view === webviewView) view = undefined;
     });
-    // Push immediately; if the page script is not ready yet the message is
-    // dropped harmlessly and the {type:'ready'} handler pushes again.
-    void pushReport();
+    // Push now and a few times after: the page script may not be ready for the
+    // first message, and the {type:'ready'} handler pushes again. The retries
+    // guarantee the sidebar shows data even if the handshake is lost.
+    for (const delay of [0, 500, 1500, 3000]) {
+      setTimeout(() => void pushReport(), delay);
+    }
   }
 }
 
@@ -187,9 +185,7 @@ export function activate(context: vscode.ExtensionContext): void {
       ensurePanel();
       void exportJson();
     }),
-    vscode.window.registerWebviewViewProvider('copilotTokens.view', new TokensViewProvider(), {
-      webviewOptions: { retainContextWhenHidden: true },
-    }),
+    vscode.window.registerWebviewViewProvider('copilotTokens.view', new TokensViewProvider()),
     vscode.workspace.onDidChangeConfiguration(e => {
       if (e.affectsConfiguration('copilotTokens.autoRefresh')) {
         startAutoRefresh();

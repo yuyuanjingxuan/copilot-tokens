@@ -29,7 +29,7 @@
         {
           "id": "copilotTokens",
           "title": "Copilot Tokens",
-          "icon": "icon.png"
+          "icon": "activitybar.png"
         }
       ]
     },
