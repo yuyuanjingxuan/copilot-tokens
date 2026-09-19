@@ -5,7 +5,7 @@
 > [Chinese (Simplified) README](README.zh-CN.md)
 
 [![CI](https://github.com/yuyuanjingxuan/copilot-tokens/actions/workflows/ci.yml/badge.svg)](https://github.com/yuyuanjingxuan/copilot-tokens/actions/workflows/ci.yml)
-[![Coverage](https://img.shields.io/badge/coverage-84%25-brightgreen.svg)](https://github.com/yuyuanjingxuan/copilot-tokens/actions/workflows/ci.yml)
+[![Coverage](https://coveralls.io/repos/github/yuyuanjingxuan/copilot-tokens/badge.svg)](https://coveralls.io/github/yuyuanjingxuan/copilot-tokens)
 [![VS Code](https://img.shields.io/badge/VS_Code-%E2%89%A51.85-blue.svg)](https://code.visualstudio.com/)
 [![Python](https://img.shields.io/badge/Python-3.9--3.13-blue.svg)](https://www.python.org/)
 [![Dependencies](https://img.shields.io/badge/dependencies-none-brightgreen.svg)]()
