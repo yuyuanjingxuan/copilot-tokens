@@ -2,7 +2,7 @@
   "name": "copilot-tokens",
   "displayName": "Copilot Tokens",
   "description": "Token usage tracker for VS Code Copilot Chat — parses built-in debug logs and shows per-session input/output tokens, models, and latency.",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "publisher": "yuyuanjingxuan",
   "license": "MIT",
   "icon": "icon.png",
@@ -24,6 +24,24 @@
   "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "copilotTokens",
+          "title": "Copilot Tokens",
+          "icon": "icon.png"
+        }
+      ]
+    },
+    "views": {
+      "copilotTokens": [
+        {
+          "type": "webview",
+          "id": "copilotTokens.view",
+          "name": "Token Usage"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "copilotTokens.show",
@@ -46,6 +64,12 @@
           "default": 7,
           "minimum": 1,
           "description": "Default number of days to include when showing usage."
+        },
+        "copilotTokens.autoRefresh": {
+          "type": "number",
+          "default": 60,
+          "minimum": 0,
+          "description": "Auto-refresh interval in seconds. Set to 0 to disable auto-refresh."
         },
         "copilotTokens.language": {
           "type": "string",

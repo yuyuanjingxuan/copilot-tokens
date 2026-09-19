@@ -2,6 +2,16 @@
 
 All notable changes to the Copilot Tokens extension are documented here.
 
+## 0.1.3
+
+- **Activity bar icon** — the dashboard now lives in a sidebar view
+  (click the icon on the left activity bar); the full-width tab panel is
+  still available via `Copilot Tokens: Show Usage`
+- **Status bar item** — total tokens for the selected day window shown on
+  the right side of the status bar; click it to open the panel
+- **Auto-refresh** — the report re-scans the logs automatically every
+  60 seconds (configurable via `copilotTokens.autoRefresh`, `0` disables)
+
 ## 0.1.2
 
 - Published to the VS Code Marketplace

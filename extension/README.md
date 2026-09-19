@@ -44,6 +44,13 @@ Enable debug log file writing in VS Code settings
   (from your first user message)
 - **Expandable per-request detail** — duration, TTFT, input / output tokens,
   model for every single LLM request
+- **Activity bar icon** — click the icon on the left to open the dashboard
+  in the sidebar; `Copilot Tokens: Show Usage` still opens the full-width
+  tab panel
+- **Status bar** — total tokens for the selected window on the right side
+  of the status bar; click to open the panel
+- **Auto-refresh** — re-scans the logs every 60 s by default
+  (`copilotTokens.autoRefresh`, set `0` to disable)
 - **Day window** — 1 / 7 / 30 days or all sessions
 - **JSON export** — save the current report as a UTF-8 JSON file
 - **Theming** — follows your light/dark theme; 5 accent color themes
@@ -57,15 +64,20 @@ Enable debug log file writing in VS Code settings
 
 | Command | Action |
 |---|---|
-| `Copilot Tokens: Show Usage` | Open the usage panel |
+| `Copilot Tokens: Show Usage` | Open the usage panel (full-width tab) |
 | `Copilot Tokens: Refresh` | Re-scan the logs |
 | `Copilot Tokens: Export JSON` | Save the current report as a JSON file |
+
+The dashboard is also available as a **sidebar view**: click the
+Copilot Tokens icon on the activity bar (left edge). The status bar item
+on the right shows the total token count and opens the panel on click.
 
 ## Settings
 
 | Setting | Default | Description |
 |---|---|---|
 | `copilotTokens.days` | `7` | Default day window when opening the panel |
+| `copilotTokens.autoRefresh` | `60` | Auto-refresh interval in seconds; `0` disables |
 | `copilotTokens.language` | `auto` | UI language: `auto` / `en` / `zh-CN` |
 | `copilotTokens.theme` | `default` | Panel color theme: `default` / `green` / `purple` / `orange` / `red` |
 

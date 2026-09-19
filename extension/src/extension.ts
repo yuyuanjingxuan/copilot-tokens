@@ -4,6 +4,9 @@ import { getStrings, resolveLanguage, Lang } from './i18n';
 import { webviewHtml } from './webview';
 
 let panel: vscode.WebviewPanel | undefined;
+let view: vscode.WebviewView | undefined;
+let statusBar: vscode.StatusBarItem | undefined;
+let refreshTimer: NodeJS.Timeout | undefined;
 let currentDays: number | null = 7;
 let currentTheme: string = 'default';
 
@@ -21,10 +24,65 @@ function buildReport(): UsageReport {
 }
 
 function pushReport(): UsageReport | undefined {
-  if (!panel) return;
   const report = buildReport();
-  panel.webview.postMessage({ type: 'report', report });
+  if (panel) panel.webview.postMessage({ type: 'report', report });
+  if (view) view.webview.postMessage({ type: 'report', report });
+  updateStatusBar(report);
   return report;
+}
+
+function updateStatusBar(report: UsageReport): void {
+  if (!statusBar) return;
+  const s = getStrings(getLanguage());
+  const t = report.totals;
+  statusBar.text = `$(zap) ${t.totalTokens.toLocaleString()}`;
+  statusBar.tooltip =
+    `${s.title}\n` +
+    `${s.sessions}: ${t.sessions}   ${s.requests}: ${t.requests}\n` +
+    `${s.total}: ${t.totalTokens.toLocaleString()} (${report.days === null ? s.all : report.days + 'd'})`;
+  statusBar.show();
+}
+
+function handleMessage(msg: any): void {
+  switch (msg.type) {
+    case 'setDays':
+      currentDays = msg.days;
+      pushReport();
+      break;
+    case 'setTheme':
+      currentTheme = msg.theme;
+      vscode.workspace.getConfiguration('copilotTokens').update('theme', msg.theme, true);
+      pushReport();
+      break;
+    case 'refresh': {
+      const report = pushReport();
+      if (report) {
+        const s = getStrings(getLanguage());
+        const text = `${s.refreshed} · ${s.sessions} ${report.totals.sessions} · ${s.total} ${report.totals.totalTokens.toLocaleString()}`;
+        panel?.webview.postMessage({ type: 'toast', text });
+        view?.webview.postMessage({ type: 'toast', text });
+      }
+      break;
+    }
+    case 'export':
+      void exportJson();
+      break;
+  }
+}
+
+function startAutoRefresh(): void {
+  stopAutoRefresh();
+  const seconds = vscode.workspace.getConfiguration('copilotTokens').get<number>('autoRefresh', 60);
+  if (seconds > 0) {
+    refreshTimer = setInterval(() => pushReport(), seconds * 1000);
+  }
+}
+
+function stopAutoRefresh(): void {
+  if (refreshTimer) {
+    clearInterval(refreshTimer);
+    refreshTimer = undefined;
+  }
 }
 
 function ensurePanel(): vscode.WebviewPanel {
@@ -41,34 +99,7 @@ function ensurePanel(): vscode.WebviewPanel {
   );
   panel.webview.html = webviewHtml(strings, panel.webview.cspSource);
 
-  panel.webview.onDidReceiveMessage(msg => {
-    switch (msg.type) {
-      case 'setDays':
-        currentDays = msg.days;
-        pushReport();
-        break;
-      case 'setTheme':
-        currentTheme = msg.theme;
-        vscode.workspace.getConfiguration('copilotTokens').update('theme', msg.theme, true);
-        pushReport();
-        break;
-      case 'refresh': {
-        const p = panel;
-        const report = pushReport();
-        if (p && report) {
-          const s = getStrings(getLanguage());
-          p.webview.postMessage({
-            type: 'toast',
-            text: `${s.refreshed} · ${s.sessions} ${report.totals.sessions} · ${s.total} ${report.totals.totalTokens.toLocaleString()}`,
-          });
-        }
-        break;
-      }
-      case 'export':
-        void exportJson();
-        break;
-    }
-  });
+  panel.webview.onDidReceiveMessage(handleMessage);
 
   panel.onDidDispose(() => { panel = undefined; });
   pushReport();
@@ -95,10 +126,27 @@ async function exportJson(): Promise<void> {
   }
 }
 
+class TokensViewProvider implements vscode.WebviewViewProvider {
+  resolveWebviewView(webviewView: vscode.WebviewView): void {
+    view = webviewView;
+    const strings = getStrings(getLanguage());
+    webviewView.webview.html = webviewHtml(strings, webviewView.webview.cspSource);
+    webviewView.webview.onDidReceiveMessage(handleMessage);
+    webviewView.onDidDispose(() => {
+      if (view === webviewView) view = undefined;
+    });
+    pushReport();
+  }
+}
+
 export function activate(context: vscode.ExtensionContext): void {
   const cfg = vscode.workspace.getConfiguration('copilotTokens');
   currentDays = cfg.get<number>('days', 7);
   currentTheme = cfg.get<string>('theme', 'default');
+
+  statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
+  statusBar.command = 'copilotTokens.show';
+  context.subscriptions.push(statusBar);
 
   context.subscriptions.push(
     vscode.commands.registerCommand('copilotTokens.show', () => {
@@ -112,10 +160,25 @@ export function activate(context: vscode.ExtensionContext): void {
       ensurePanel();
       void exportJson();
     }),
+    vscode.window.registerWebviewViewProvider('copilotTokens.view', new TokensViewProvider()),
+    vscode.workspace.onDidChangeConfiguration(e => {
+      if (e.affectsConfiguration('copilotTokens.autoRefresh')) {
+        startAutoRefresh();
+      } else if (e.affectsConfiguration('copilotTokens.days') || e.affectsConfiguration('copilotTokens.theme')) {
+        const c = vscode.workspace.getConfiguration('copilotTokens');
+        currentDays = c.get<number>('days', 7);
+        currentTheme = c.get<string>('theme', 'default');
+        pushReport();
+      }
+    }),
   );
+
+  startAutoRefresh();
+  pushReport();
 }
 
 export function deactivate(): void {
+  stopAutoRefresh();
   panel?.dispose();
   panel = undefined;
 }
