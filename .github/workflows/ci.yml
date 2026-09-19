@@ -36,7 +36,7 @@ jobs:
           python -m coverage run --append cli/copilot_tokens.py --root tests/fixtures/user --all --json > /dev/null
           python -m coverage run --append cli/copilot_tokens.py --root tests/fixtures/user --session test-sid-0001 > /dev/null
           python -m coverage report -m
-          python -m coverage lcov
+          python -m coverage lcov -o lcov.info
 
       - name: Upload coverage to Coveralls
         if: matrix.python-version == '3.12'
