@@ -5,6 +5,9 @@ __pycache__/
 .venv/
 venv/
 
+# Build artifacts
+*.vsix
+
 # Exported data (may contain session titles and other personal content)
 *.json
 usage*.txt
