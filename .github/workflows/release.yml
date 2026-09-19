@@ -1,0 +1,49 @@
+name: Release
+
+# Push a tag like `v0.1.3` and this workflow packages the extension and
+# publishes a GitHub Release with the .vsix attached — no manual upload.
+#
+# Usage:
+#   git tag v0.1.3
+#   git push --tags
+#
+# The GITHUB_TOKEN in CI has write access to releases (unlike the
+# restricted token obtained locally via `git credential fill`).
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        working-directory: extension
+        run: npm install
+
+      - name: Package .vsix (validate manifest)
+        working-directory: extension
+        run: npm run package
+
+      - name: Find .vsix
+        id: vsix
+        run: echo "path=$(ls extension/*.vsix)" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.vsix.outputs.path }}
+          generate_release_notes: true
