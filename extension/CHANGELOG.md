@@ -11,6 +11,9 @@ All notable changes to the Copilot Tokens extension are documented here.
   the right side of the status bar; click it to open the panel
 - **Auto-refresh** — the report re-scans the logs automatically every
   60 seconds (configurable via `copilotTokens.autoRefresh`, `0` disables)
+- **Deleted sessions** — sessions removed from the VS Code chat list are
+  still counted (the tokens were really used) but are grouped at the bottom
+  of the table with a "Deleted" badge, so the data stays self-consistent
 
 ## 0.1.2
 

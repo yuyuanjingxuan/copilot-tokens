@@ -27,6 +27,8 @@ export interface Strings {
   version: string;
   theme: string;
   refreshed: string;
+  deleted: string;
+  deletedGroup: string;
 }
 
 const en: Strings = {
@@ -56,6 +58,8 @@ const en: Strings = {
   version: 'Version',
   theme: 'Theme',
   refreshed: 'Updated',
+  deleted: 'Deleted',
+  deletedGroup: 'Deleted sessions',
 };
 
 const zh: Strings = {
@@ -85,6 +89,8 @@ const zh: Strings = {
   version: '版本',
   theme: '配色',
   refreshed: '已更新',
+  deleted: '已删除',
+  deletedGroup: '已删除的会话',
 };
 
 export function getStrings(lang: Lang): Strings {

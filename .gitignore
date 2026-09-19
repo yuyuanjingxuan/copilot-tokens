@@ -14,6 +14,7 @@ usage*.txt
 !examples/*.json
 !extension/package.json
 !extension/tsconfig.json
+!extension/package-lock.json
 
 # Editor / OS
 .vscode/

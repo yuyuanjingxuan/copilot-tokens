@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+import initSqlJs from 'sql.js';
 
 // ── Data model ──────────────────────────────────────────────────────────────
 
@@ -23,11 +24,13 @@ export interface Session {
   vscodeVersion: string;
   copilotVersion: string;
   requests: LlmRequest[];
+  deleted?: boolean;
 }
 
 export interface SessionSummary {
   sid: string;
   title: string;
+  deleted?: boolean;
   firstTs: number;
   lastTs: number;
   vscodeVersion: string;
@@ -192,11 +195,62 @@ function parseSession(filePath: string): Session | null {
   return sess;
 }
 
+// ── Live session detection (session-store.db) ───────────────────────────────
+
+let sqlJsPromise: Promise<any> | undefined;
+
+function getSqlJs(): Promise<any> {
+  if (!sqlJsPromise) {
+    sqlJsPromise = initSqlJs({
+      locateFile: () =>
+        path.join(__dirname, '..', 'node_modules', 'sql.js', 'dist', 'sql-wasm.wasm'),
+    });
+  }
+  return sqlJsPromise;
+}
+
 /**
- * Load all sessions, dedupe by sid, filter by days (null = all),
- * sort by lastTs descending.
+ * Read the session ids VS Code still lists in its chat view.
+ *
+ * VS Code removes a row from the `sessions` table of `session-store.db`
+ * when a session is deleted, but the debug-log directory stays on disk —
+ * so "sid not in db" == "deleted from the chat list".
+ *
+ * Only the main db file is read (copied to a temp file first, so the live
+ * VS Code database is never touched). Returns null when the db is missing
+ * or unreadable; callers then skip deleted-marking entirely.
  */
-export function loadSessions(root?: string, days: number | null = 7): Session[] {
+export async function loadLiveSessionIds(): Promise<Set<string> | null> {
+  const dbPath = path.join(
+    vscodeUserDir(), 'globalStorage', 'github.copilot-chat', 'session-store.db',
+  );
+  if (!fs.existsSync(dbPath)) return null;
+  const tmp = path.join(os.tmpdir(), `copilot-tokens-db-${process.pid}-${Date.now()}.db`);
+  try {
+    fs.copyFileSync(dbPath, tmp);
+    const SQL = await getSqlJs();
+    const db = new SQL.Database(fs.readFileSync(tmp));
+    try {
+      const res = db.exec('SELECT id FROM sessions');
+      const ids = new Set<string>();
+      if (res.length > 0) for (const row of res[0].values) ids.add(String(row[0]));
+      return ids;
+    } finally {
+      db.close();
+    }
+  } catch {
+    return null;
+  } finally {
+    try { fs.unlinkSync(tmp); } catch { /* ignore */ }
+  }
+}
+
+/**
+ * Load all sessions, dedupe by sid, filter by days (null = all), mark
+ * sessions deleted from the VS Code chat list, and sort live sessions
+ * first (newest lastTs first) with deleted ones grouped after.
+ */
+export async function loadSessions(root?: string, days: number | null = 7): Promise<Session[]> {
   const seen = new Map<string, Session>();
   for (const file of findMainJsonlFiles(root)) {
     const s = parseSession(file);
@@ -208,7 +262,12 @@ export function loadSessions(root?: string, days: number | null = 7): Session[] 
     const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
     sessions = sessions.filter(s => s.lastTs >= cutoff);
   }
-  sessions.sort((a, b) => b.lastTs - a.lastTs);
+
+  const live = await loadLiveSessionIds();
+  if (live) for (const s of sessions) s.deleted = !live.has(s.sid);
+
+  sessions.sort((a, b) =>
+    Number(a.deleted ?? false) - Number(b.deleted ?? false) || b.lastTs - a.lastTs);
   return sessions;
 }
 
@@ -227,6 +286,7 @@ export function summarize(sessions: Session[], days: number | null): UsageReport
     return {
       sid: s.sid,
       title: s.title,
+      deleted: s.deleted,
       firstTs: s.firstTs,
       lastTs: s.lastTs,
       vscodeVersion: s.vscodeVersion,

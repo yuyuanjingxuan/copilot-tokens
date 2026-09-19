@@ -16,15 +16,15 @@ function getLanguage(): Lang {
   return resolveLanguage(setting, vscode.env.language);
 }
 
-function buildReport(): UsageReport {
-  const sessions = loadSessions(undefined, currentDays);
+async function buildReport(): Promise<UsageReport> {
+  const sessions = await loadSessions(undefined, currentDays);
   const report = summarize(sessions, currentDays);
   report.theme = currentTheme;
   return report;
 }
 
-function pushReport(): UsageReport | undefined {
-  const report = buildReport();
+async function pushReport(): Promise<UsageReport | undefined> {
+  const report = await buildReport();
   if (panel) panel.webview.postMessage({ type: 'report', report });
   if (view) view.webview.postMessage({ type: 'report', report });
   updateStatusBar(report);
@@ -47,21 +47,22 @@ function handleMessage(msg: any): void {
   switch (msg.type) {
     case 'setDays':
       currentDays = msg.days;
-      pushReport();
+      void pushReport();
       break;
     case 'setTheme':
       currentTheme = msg.theme;
       vscode.workspace.getConfiguration('copilotTokens').update('theme', msg.theme, true);
-      pushReport();
+      void pushReport();
       break;
     case 'refresh': {
-      const report = pushReport();
-      if (report) {
-        const s = getStrings(getLanguage());
-        const text = `${s.refreshed} · ${s.sessions} ${report.totals.sessions} · ${s.total} ${report.totals.totalTokens.toLocaleString()}`;
-        panel?.webview.postMessage({ type: 'toast', text });
-        view?.webview.postMessage({ type: 'toast', text });
-      }
+      void pushReport().then(report => {
+        if (report) {
+          const s = getStrings(getLanguage());
+          const text = `${s.refreshed} · ${s.sessions} ${report.totals.sessions} · ${s.total} ${report.totals.totalTokens.toLocaleString()}`;
+          panel?.webview.postMessage({ type: 'toast', text });
+          view?.webview.postMessage({ type: 'toast', text });
+        }
+      });
       break;
     }
     case 'export':
@@ -74,7 +75,7 @@ function startAutoRefresh(): void {
   stopAutoRefresh();
   const seconds = vscode.workspace.getConfiguration('copilotTokens').get<number>('autoRefresh', 60);
   if (seconds > 0) {
-    refreshTimer = setInterval(() => pushReport(), seconds * 1000);
+    refreshTimer = setInterval(() => void pushReport(), seconds * 1000);
   }
 }
 
@@ -135,7 +136,7 @@ class TokensViewProvider implements vscode.WebviewViewProvider {
     webviewView.onDidDispose(() => {
       if (view === webviewView) view = undefined;
     });
-    pushReport();
+    void pushReport();
   }
 }
 
@@ -154,7 +155,7 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand('copilotTokens.refresh', () => {
       ensurePanel();
-      pushReport();
+      void pushReport();
     }),
     vscode.commands.registerCommand('copilotTokens.exportJson', () => {
       ensurePanel();
@@ -168,13 +169,13 @@ export function activate(context: vscode.ExtensionContext): void {
         const c = vscode.workspace.getConfiguration('copilotTokens');
         currentDays = c.get<number>('days', 7);
         currentTheme = c.get<string>('theme', 'default');
-        pushReport();
+        void pushReport();
       }
     }),
   );
 
   startAutoRefresh();
-  pushReport();
+  void pushReport();
 }
 
 export function deactivate(): void {

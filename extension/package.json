@@ -100,12 +100,16 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "package": "vsce package --no-dependencies"
+    "package": "vsce package"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
+    "@types/sql.js": "^1.4.11",
     "@types/vscode": "^1.85.0",
     "@vscode/vsce": "^3.3.2",
     "typescript": "^5.4.0"
+  },
+  "dependencies": {
+    "sql.js": "^1.14.2"
   }
 }

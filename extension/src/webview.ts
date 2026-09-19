@@ -132,6 +132,18 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
   tr.session-row { cursor: pointer; }
   tr.session-row:hover td { background: var(--ct-hover); }
   tr.session-row.open td { background: var(--ct-active); }
+  tr.session-row.deleted td { opacity: 0.55; }
+  tr.group-row td {
+    padding: 10px 10px 4px;
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px;
+    opacity: 0.6; border-bottom: 1px solid var(--ct-border);
+  }
+  .badge {
+    display: inline-block; margin-left: 6px; padding: 0 6px;
+    font-size: 10px; border-radius: 8px; vertical-align: 1px;
+    background: var(--ct-btn2-bg); color: var(--ct-btn2-fg);
+    border: 1px solid var(--ct-border);
+  }
   .sid { font-family: var(--vscode-editor-font-family, monospace); font-size: 11px; opacity: 0.6; }
   .title-cell { max-width: 340px; overflow: hidden; text-overflow: ellipsis; }
   .models { font-size: 11px; opacity: 0.8; }
@@ -239,11 +251,17 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
       '<th class="num">' + esc(S.output) + '</th><th class="num">' + esc(S.cached) + '</th>' +
       '<th class="num">' + esc(S.total) + '</th><th>' + esc(S.model) + '</th>' +
       '</tr></thead><tbody>';
+    let prevDeleted = null;
     for (const s of report.sessions) {
+      const del = !!s.deleted;
+      if (prevDeleted !== null && del !== prevDeleted) {
+        html += '<tr class="group-row"><td colspan="9">' + esc(S.deletedGroup) + '</td></tr>';
+      }
+      prevDeleted = del;
       const open = s.sid === openSid;
-      html += '<tr class="session-row' + (open ? ' open' : '') + '" data-sid="' + esc(s.sid) + '">' +
+      html += '<tr class="session-row' + (open ? ' open' : '') + (del ? ' deleted' : '') + '" data-sid="' + esc(s.sid) + '">' +
         '<td><span class="chev">&#9656;</span></td>' +
-        '<td class="title-cell" title="' + esc(s.title) + '">' + (esc(s.title) || '-') + '<div class="sid">' + esc(s.sid) + '</div></td>' +
+        '<td class="title-cell" title="' + esc(s.title) + '">' + (esc(s.title) || '-') + (del ? '<span class="badge">' + esc(S.deleted) + '</span>' : '') + '<div class="sid">' + esc(s.sid) + '</div></td>' +
         '<td>' + fmtTime(s.lastTs) + '</td>' +
         '<td class="num">' + fmt(s.requestCount) + '</td>' +
         '<td class="num">' + fmt(s.inputTokens) + '</td>' +

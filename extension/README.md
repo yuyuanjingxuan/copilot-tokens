@@ -42,6 +42,9 @@ Enable debug log file writing in VS Code settings
   average latency over the selected day window
 - **Per-session table** — time, request count, tokens, model, session title
   (from your first user message)
+- **Deleted sessions** — sessions you removed from the VS Code chat list
+  are still counted (the tokens were consumed) but grouped at the bottom
+  with a "Deleted" badge
 - **Expandable per-request detail** — duration, TTFT, input / output tokens,
   model for every single LLM request
 - **Activity bar icon** — click the icon on the left to open the dashboard
