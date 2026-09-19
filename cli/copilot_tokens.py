@@ -5,7 +5,9 @@ copilot_tokens.py — VS Code Copilot Chat token usage tracker
 ============================================================
 
 Parses the built-in Copilot Chat debug logs (main.jsonl) and aggregates
-token usage per session. Pure stdlib, zero dependencies. Run directly:
+token usage per session. Pure stdlib, zero dependencies. Sessions removed
+from the VS Code chat list are still counted but grouped at the bottom with
+a [Deleted] marker. Run directly:
 
     python cli/copilot_tokens.py             # sessions from the last 7 days
     python cli/copilot_tokens.py --days 30   # last 30 days
@@ -28,7 +30,10 @@ import argparse
 import json
 import os
 import re
+import shutil
+import sqlite3
 import sys
+import tempfile
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
@@ -84,6 +89,7 @@ class Session:
     last_ts: int = 0
     vscode_version: str = ""
     copilot_version: str = ""
+    deleted: bool = False
     requests: list[LlmRequest] = field(default_factory=list)
 
     @property
@@ -217,13 +223,55 @@ def parse_session(path: Path) -> Session | None:
     return sess
 
 
+def load_live_session_ids(root: Path | None = None) -> set[str] | None:
+    """Read the session ids VS Code still lists in its chat view.
+
+    VS Code removes a row from the `sessions` table of `session-store.db`
+    when a session is deleted, but the debug-log directory stays on disk —
+    so "sid not in db" == "deleted from the chat list".
+
+    The db is copied to a temp file first so the live VS Code database is
+    never touched. Returns None when the db is missing or unreadable;
+    callers then skip deleted-marking entirely.
+    """
+    user = root if root is not None else vscode_user_dir()
+    db_path = user / "globalStorage" / "github.copilot-chat" / "session-store.db"
+    if not db_path.is_file():
+        return None
+    tmp = Path(tempfile.gettempdir()) / (
+        f"copilot-tokens-db-{os.getpid()}-{int(time.time() * 1000)}.db"
+    )
+    try:
+        shutil.copyfile(db_path, tmp)
+        con = sqlite3.connect(str(tmp))
+        try:
+            rows = con.execute("SELECT id FROM sessions").fetchall()
+            return {str(r[0]) for r in rows}
+        finally:
+            con.close()
+    except Exception:
+        return None
+    finally:
+        try:
+            tmp.unlink()
+        except OSError:
+            pass
+
+
 def load_sessions(root: Path | None = None) -> list[Session]:
     seen: dict[str, Session] = {}
     for f in find_main_jsonl_files(root):
         s = parse_session(f)
         if s and s.sid not in seen:
             seen[s.sid] = s
-    return sorted(seen.values(), key=lambda s: s.last_ts, reverse=True)
+    sessions = list(seen.values())
+    live = load_live_session_ids(root)
+    if live is not None:
+        for s in sessions:
+            s.deleted = s.sid not in live
+    # Live sessions first (newest last_ts first), deleted grouped after.
+    sessions.sort(key=lambda s: (s.deleted, -s.last_ts))
+    return sessions
 
 
 # ── Formatting ──────────────────────────────────────────────────────────────
@@ -259,18 +307,24 @@ def print_table(sessions: list[Session]) -> None:
     print(dim("─" * 110))
 
     tot_in = tot_out = tot_cached = tot_req = 0
+    prev_deleted = None
     for s in sessions:
         tot_in += s.input_tokens
         tot_out += s.output_tokens
         tot_cached += s.cached_tokens
         tot_req += len(s.requests)
+        if prev_deleted is not None and s.deleted != prev_deleted:
+            print(dim("─" * 110))
+            print(dim("Deleted sessions"))
+        prev_deleted = s.deleted
         title = s.title or dim("(untitled)")
+        badge = dim("  [Deleted]") if s.deleted else ""
         print(
             f"{cyan(s.sid[:8]):<10} {fmt_ts(s.last_ts):<13} "
             f"{len(s.requests):>4} "
             f"{fmt_num(s.input_tokens):>9} {fmt_num(s.output_tokens):>8} "
             f"{fmt_num(s.cached_tokens):>8} {fmt_num(s.total_tokens):>9}  "
-            f"{magenta(model_summary(s.models))}  {title}"
+            f"{magenta(model_summary(s.models))}  {title}{badge}"
         )
 
     print(dim("─" * 110))
@@ -289,6 +343,8 @@ def print_detail(s: Session) -> None:
         print(f"  Versions: VS Code {s.vscode_version} / Copilot {s.copilot_version}")
     print(f"  Time:   {fmt_ts(s.first_ts)} → {fmt_ts(s.last_ts)}")
     print(f"  Title:  {s.title or '(none)'}")
+    if s.deleted:
+        print(dim("  Status: Deleted (removed from the VS Code chat list)"))
     print()
 
     header = f"{'#':>3} {'Time':<12} {'Dur':>7} {'Input':>9} {'Output':>7} {'Cached':>8}  Model"
@@ -313,6 +369,7 @@ def to_json(sessions: list[Session]) -> str:
         out.append({
             "sessionId": s.sid,
             "title": s.title,
+            "deleted": s.deleted,
             "firstTs": s.first_ts,
             "lastTs": s.last_ts,
             "vscodeVersion": s.vscode_version,
