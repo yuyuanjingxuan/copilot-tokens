@@ -9,7 +9,7 @@
 [![VS Code Marketplace](https://img.shields.io/badge/VS_Code_Marketplace-listed-blue)](https://marketplace.visualstudio.com/items?itemName=yuyuanjingxuan.copilot-tokens)
 [![VS Code](https://img.shields.io/badge/VS_Code-%E2%89%A51.85-blue.svg)](https://code.visualstudio.com/)
 [![Python](https://img.shields.io/badge/Python-3.9--3.13-blue.svg)](https://www.python.org/)
-[![Dependencies](https://img.shields.io/badge/dependencies-none-brightgreen.svg)]()
+[![CLI dependencies](https://img.shields.io/badge/CLI_dependencies-none-brightgreen.svg)]()
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 Token usage tracker for VS Code Copilot Chat (Windows / macOS / Linux).
@@ -50,6 +50,16 @@ follows your light/dark theme, supports English / Chinese (auto-detected),
 and offers five full-page color themes (default / green / purple / orange /
 red, persisted in settings).
 
+- **Activity bar icon** — click the icon on the left to open the dashboard
+  in the sidebar; `Copilot Tokens: Show Usage` opens the full-width tab
+- **Status bar** — total tokens for the selected window on the right side
+  of the status bar; click to open the panel
+- **Auto-refresh** — re-scans the logs every 60 s by default
+  (`copilotTokens.autoRefresh`, `0` disables)
+- **Deleted sessions** — sessions removed from the VS Code chat list are
+  still counted (the tokens were consumed) but grouped at the bottom of the
+  table with a "Deleted" badge
+
 ![Extension preview](docs/extension-preview.png)
 
 ![Extension color themes](docs/extension-themes.png)
@@ -71,7 +81,8 @@ extension/
 2. Search for **Copilot Tokens** and click **Install**
    (or go straight to the
    [marketplace listing](https://marketplace.visualstudio.com/items?itemName=yuyuanjingxuan.copilot-tokens))
-3. Run the command **Copilot Tokens: Show Usage**
+3. Click the **Copilot Tokens** icon on the activity bar (or run the
+   command **Copilot Tokens: Show Usage**)
 
 Updates are delivered automatically through the Marketplace.
 
@@ -107,6 +118,7 @@ Want the very latest version before it hits the Marketplace?
 | Setting | Default | Description |
 |---|---|---|
 | `copilotTokens.days` | `7` | Default day window when opening the panel |
+| `copilotTokens.autoRefresh` | `60` | Auto-refresh interval in seconds; `0` disables |
 | `copilotTokens.language` | `auto` | UI language: `auto` / `en` / `zh-CN` |
 | `copilotTokens.theme` | `default` | Panel color theme: `default` / `green` / `purple` / `orange` / `red` |
 

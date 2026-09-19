@@ -9,7 +9,7 @@
 [![VS Code Marketplace](https://img.shields.io/badge/VS_Code_Marketplace-listed-blue)](https://marketplace.visualstudio.com/items?itemName=yuyuanjingxuan.copilot-tokens)
 [![VS Code](https://img.shields.io/badge/VS_Code-%E2%89%A51.85-blue.svg)](https://code.visualstudio.com/)
 [![Python](https://img.shields.io/badge/Python-3.9--3.13-blue.svg)](https://www.python.org/)
-[![Dependencies](https://img.shields.io/badge/dependencies-none-brightgreen.svg)]()
+[![CLI dependencies](https://img.shields.io/badge/CLI_dependencies-none-brightgreen.svg)]()
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 VS Code Copilot Chat 的 token 用量统计工具（Windows / macOS / Linux）。
@@ -44,6 +44,14 @@ VS Code Copilot Chat 的 token 用量统计工具（Windows / macOS / Linux）�
 界面支持英文 / 中文（自动检测），并提供 5 种整页配色
 （default / green / purple / orange / red，选择会持久化到设置）。
 
+- **活动栏图标**——点击左侧活动栏图标即可在侧边栏打开面板；
+  `Copilot Tokens: Show Usage` 命令打开全宽标签页
+- **状态栏**——状态栏右侧显示当前窗口的总 token 数，点击打开面板
+- **自动刷新**——默认每 60 秒重新扫描日志（`copilotTokens.autoRefresh`，
+  设为 `0` 关闭）
+- **已删除会话**——从 VS Code 聊天列表删除的会话仍计入统计（token 已消耗），
+  但排在表格底部并带"已删除"徽章
+
 ![扩展预览](docs/extension-preview.png)
 
 ![扩展配色主题](docs/extension-themes.png)
@@ -65,7 +73,8 @@ extension/
 2. 搜索 **Copilot Tokens**，点击 **Install**
    （或直接访问
    [市场页面](https://marketplace.visualstudio.com/items?itemName=yuyuanjingxuan.copilot-tokens)）
-3. 运行命令 **Copilot Tokens: Show Usage**
+3. 点击活动栏上的 **Copilot Tokens** 图标（或运行命令
+   **Copilot Tokens: Show Usage**）
 
 后续更新会通过 Marketplace 自动推送。
 
@@ -100,6 +109,7 @@ extension/
 | 设置 | 默认值 | 说明 |
 |---|---|---|
 | `copilotTokens.days` | `7` | 打开面板时的默认天数窗口 |
+| `copilotTokens.autoRefresh` | `60` | 自动刷新间隔（秒），`0` 关闭 |
 | `copilotTokens.language` | `auto` | 界面语言：`auto` / `en` / `zh-CN` |
 | `copilotTokens.theme` | `default` | 面板配色：`default` / `green` / `purple` / `orange` / `red` |
 
