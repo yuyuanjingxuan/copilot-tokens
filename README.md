@@ -6,8 +6,8 @@
 
 [![CI](https://github.com/yuyuanjingxuan/copilot-tokens/actions/workflows/ci.yml/badge.svg)](https://github.com/yuyuanjingxuan/copilot-tokens/actions/workflows/ci.yml)
 [![Coverage](https://img.shields.io/badge/coverage-84%25-brightgreen.svg)](https://github.com/yuyuanjingxuan/copilot-tokens/actions/workflows/ci.yml)
-[![Python](https://img.shields.io/badge/Python-3.9--3.13-blue.svg)](https://www.python.org/)
 [![VS Code](https://img.shields.io/badge/VS_Code-%E2%89%A51.85-blue.svg)](https://code.visualstudio.com/)
+[![Python](https://img.shields.io/badge/Python-3.9--3.13-blue.svg)](https://www.python.org/)
 [![Dependencies](https://img.shields.io/badge/dependencies-none-brightgreen.svg)]()
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -15,8 +15,8 @@ Token usage tracker for VS Code Copilot Chat (Windows / macOS / Linux).
 
 Parses the built-in Copilot Chat debug logs (`main.jsonl`) and aggregates
 input / output tokens, model, and latency per LLM request and per session.
-
-**Single file · Pure Python stdlib · Zero dependencies**
+Available as a **native VS Code extension** (themed webview panel) and a
+**zero-install Python CLI** — both share identical parsing.
 
 ## Why this exists
 
@@ -41,63 +41,9 @@ Enable debug log file writing in VS Code settings:
 > local disk. Turn it off if you don't want logs persisted (this tool will
 > then have no data to read).
 
-## Install
+## VS Code extension
 
-Nothing to install — just run it (requires Python 3.9+):
-
-```bash
-# Windows: double-click copilot_tokens.bat, or run in a terminal
-python copilot_tokens.py
-
-# Optional: make it available globally
-# Windows
-copy copilot_tokens.py %USERPROFILE%\scripts\
-# macOS / Linux
-cp copilot_tokens.py ~/.local/bin/ && chmod +x ~/.local/bin/copilot_tokens
-```
-
-## Usage
-
-```
-python copilot_tokens.py                # sessions from the last 7 days
-python copilot_tokens.py --days 30      # last 30 days
-python copilot_tokens.py --all          # all sessions
-python copilot_tokens.py --top 5        # top 5 sessions by total tokens
-python copilot_tokens.py --session 6ec414c0   # per-request detail (prefix match)
-python copilot_tokens.py --json         # JSON output
-python copilot_tokens.py --json --out usage.json   # export UTF-8 JSON file
-python copilot_tokens.py --root /path/to/User      # non-standard VS Code "User" dir
-```
-
-### Sample output
-
-```
-Session    Time            Reqs       Input     Output    Cached     Total  Model / Title
-──────────────────────────────────────────────────────────────────────────────────────────
-6ec414c0 09-18 19:07     37      2.9M      60k        0      3.0M  qwen3.8-27b×37  Help me write a script…
-a8ba8abd 09-18 18:34      1     9,360      157        0     9,517  qwen3.8-27b  Who are you
-──────────────────────────────────────────────────────────────────────────────────────────
-Total                      38      2.9M      60k        0      3.0M  2 sessions
-```
-
-Detail view (`--session <id>`):
-
-```
-Session a8ba8abd-…
-  Versions: VS Code 1.138.0 / Copilot 0.66.0
-  Time:     09-18 17:49 → 09-18 18:34
-  Title:    Who are you
-
-  #  Time             Dur        Input    Output   Cached  Model
-──────────────────────────────────────────────────────────────
-  1  09-18 18:13     5.6s     9,360     157        0  qwen3.8-27b
-──────────────────────────────────────────────────────────────
-                              9,360     157        0  Total
-```
-
-## VS Code extension (optional)
-
-A native VS Code extension wraps the same parser in a themed webview panel —
+A native VS Code extension wraps the parser in a themed webview panel —
 summary cards, a per-session table, and expandable per-request detail. It
 follows your light/dark theme, supports English / Chinese (auto-detected),
 and offers five full-page color themes (default / green / purple / orange /
@@ -149,12 +95,71 @@ extension/
 | `copilotTokens.theme` | `default` | Panel color theme: `default` / `green` / `purple` / `orange` / `red` |
 
 > The extension is distributed as a `.vsix` via GitHub Releases (not yet
-> published to the Marketplace). The Python CLI remains the zero-install
-> option; both share identical parsing.
+> published to the Marketplace).
+
+## Python CLI (zero-install)
+
+Prefer the terminal? A single-file, pure-stdlib Python script (no
+dependencies, Python 3.9+) does the same job.
+
+### Install
+
+Nothing to install — just run it:
+
+```bash
+# Windows: double-click copilot_tokens.bat, or run in a terminal
+python copilot_tokens.py
+
+# Optional: make it available globally
+# Windows
+copy copilot_tokens.py %USERPROFILE%\scripts\
+# macOS / Linux
+cp copilot_tokens.py ~/.local/bin/ && chmod +x ~/.local/bin/copilot_tokens
+```
+
+### Usage
+
+```
+python copilot_tokens.py                # sessions from the last 7 days
+python copilot_tokens.py --days 30      # last 30 days
+python copilot_tokens.py --all          # all sessions
+python copilot_tokens.py --top 5        # top 5 sessions by total tokens
+python copilot_tokens.py --session 6ec414c0   # per-request detail (prefix match)
+python copilot_tokens.py --json         # JSON output
+python copilot_tokens.py --json --out usage.json   # export UTF-8 JSON file
+python copilot_tokens.py --root /path/to/User      # non-standard VS Code "User" dir
+```
+
+### Sample output
+
+```
+Session    Time            Reqs       Input     Output    Cached     Total  Model / Title
+──────────────────────────────────────────────────────────────────────────────────────────
+6ec414c0 09-18 19:07     37      2.9M      60k        0      3.0M  qwen3.8-27b×37  Help me write a script…
+a8ba8abd 09-18 18:34      1     9,360      157        0     9,517  qwen3.8-27b  Who are you
+──────────────────────────────────────────────────────────────────────────────────────────
+Total                      38      2.9M      60k        0      3.0M  2 sessions
+```
+
+Detail view (`--session <id>`):
+
+```
+Session a8ba8abd-…
+  Versions: VS Code 1.138.0 / Copilot 0.66.0
+  Time:     09-18 17:49 → 09-18 18:34
+  Title:    Who are you
+
+  #  Time             Dur        Input    Output   Cached  Model
+──────────────────────────────────────────────────────────────
+  1  09-18 18:13     5.6s     9,360     157        0  qwen3.8-27b
+──────────────────────────────────────────────────────────────
+                              9,360     157        0  Total
+```
 
 ## Data sources
 
-The script auto-discovers logs in both layouts (new and legacy):
+Both the extension and the CLI auto-discover logs in both layouts (new and
+legacy):
 
 | Layout | Path |
 |---|---|
@@ -174,7 +179,7 @@ Event types parsed (`main.jsonl` is JSONL, one event per line):
 - **Cached tokens are not recorded**: VS Code currently does not write cache
   read/write tokens to the log (see
   [microsoft/vscode#329657](https://github.com/microsoft/vscode/issues/329657)).
-  The script reserves a `cachedTokens` field; it will light up automatically
+  The parser reserves a `cachedTokens` field; it will light up automatically
   once the format supports it
 - Input tokens are the **full context of each request** (system prompt,
   history, tool results), so multi-turn sessions show a large "input" total —
@@ -185,7 +190,7 @@ Event types parsed (`main.jsonl` is JSONL, one event per line):
 
 ## Privacy
 
-- The script is **read-only** over local log files. It never phones home or
+- The tool is **read-only** over local log files. It never phones home or
   uploads anything
 - Session titles come from your first user message — review exported JSON
   for sensitive content before sharing

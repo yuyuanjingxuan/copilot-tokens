@@ -6,17 +6,16 @@
 
 [![CI](https://github.com/yuyuanjingxuan/copilot-tokens/actions/workflows/ci.yml/badge.svg)](https://github.com/yuyuanjingxuan/copilot-tokens/actions/workflows/ci.yml)
 [![Coverage](https://img.shields.io/badge/coverage-84%25-brightgreen.svg)](https://github.com/yuyuanjingxuan/copilot-tokens/actions/workflows/ci.yml)
-[![Python](https://img.shields.io/badge/Python-3.9--3.13-blue.svg)](https://www.python.org/)
 [![VS Code](https://img.shields.io/badge/VS_Code-%E2%89%A51.85-blue.svg)](https://code.visualstudio.com/)
+[![Python](https://img.shields.io/badge/Python-3.9--3.13-blue.svg)](https://www.python.org/)
 [![Dependencies](https://img.shields.io/badge/dependencies-none-brightgreen.svg)]()
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 VS Code Copilot Chat 的 token 用量统计工具（Windows / macOS / Linux）。
 
 解析 VS Code 内置 Copilot Chat 的调试日志（`main.jsonl`），按会话汇总每次 LLM 请求的
-输入 / 输出 token、模型、耗时。
-
-**单文件 · 纯 Python 标准库 · 零依赖**
+输入 / 输出 token、模型、耗时。提供**原生 VS Code 扩展**（主题化 Webview 面板）与
+**零安装 Python CLI** 两种形态，解析逻辑完全一致。
 
 ## 为什么需要它
 
@@ -37,63 +36,9 @@ VS Code Copilot Chat 的 token 用量统计工具（Windows / macOS / Linux）�
 > 该设置开启后，每个会话的完整请求日志会写入本地磁盘。
 > 如果你不希望日志落盘，可以关闭此设置（本工具将无数据可读）。
 
-## 安装
+## VS Code 扩展
 
-无需安装，直接运行（需要 Python 3.9+）：
-
-```bash
-# Windows：双击 copilot_tokens.bat，或在终端运行
-python copilot_tokens.py
-
-# 也可以全局可用
-# Windows
-copy copilot_tokens.py %USERPROFILE%\scripts\
-# macOS / Linux
-cp copilot_tokens.py ~/.local/bin/ && chmod +x ~/.local/bin/copilot_tokens
-```
-
-## 用法
-
-```
-python copilot_tokens.py                # 最近 7 天会话汇总
-python copilot_tokens.py --days 30      # 最近 30 天
-python copilot_tokens.py --all          # 全部会话
-python copilot_tokens.py --top 5        # token 最多的 5 个会话
-python copilot_tokens.py --session 6ec414c0   # 单会话逐请求明细（支持前缀匹配）
-python copilot_tokens.py --json         # JSON 输出
-python copilot_tokens.py --json --out usage.json   # 导出 UTF-8 JSON 文件
-python copilot_tokens.py --root /path/to/User      # 非标准 VS Code "User" 目录
-```
-
-### 输出示例
-
-```
-会话         时间              请求        输入       输出       缓存        总计  模型 / 标题
-──────────────────────────────────────────────────────────────────────────────────────────
-6ec414c0 09-18 19:07     37      2.9M      60k        0      3.0M  qwen3.8-27b×37  帮我写一个脚本…
-a8ba8abd 09-18 18:34      1     9,360      157        0     9,517  qwen3.8-27b  你是谁
-──────────────────────────────────────────────────────────────────────────────────────────
-合计                         38      2.9M      60k        0      3.0M  2 个会话
-```
-
-明细视图（`--session <id>`）：
-
-```
-会话 a8ba8abd-…
-  版本:   VS Code 1.138.0 / Copilot 0.66.0
-  时间:   09-18 17:49 → 09-18 18:34
-  标题:   你是谁
-
-  # 时间                耗时        输入      输出      缓存  模型
-──────────────────────────────────────────────────────────────
-  1 09-18 18:13     5.6s     9,360     157        0  qwen3.8-27b
-──────────────────────────────────────────────────────────────
-                             9,360     157        0  合计
-```
-
-## VS Code 扩展（可选）
-
-一个原生 VS Code 扩展，把同样的解析逻辑包装成跟随主题的 Webview 面板——
+一个原生 VS Code 扩展，把解析逻辑包装成跟随主题的 Webview 面板——
 汇总卡片、按会话的表格、可展开的每请求明细。自动适配浅色 / 深色主题，
 界面支持英文 / 中文（自动检测），并提供 5 种整页配色
 （default / green / purple / orange / red，选择会持久化到设置）。
@@ -144,11 +89,69 @@ extension/
 | `copilotTokens.theme` | `default` | 面板配色：`default` / `green` / `purple` / `orange` / `red` |
 
 > 扩展以 `.vsix` 形式通过 GitHub Releases 分发（尚未发布到 Marketplace）。
-> Python CLI 仍是零安装方案，两者解析逻辑完全一致。
+
+## Python CLI（零安装）
+
+更喜欢终端？一个单文件、纯标准库的 Python 脚本（零依赖，Python 3.9+）
+完成同样的工作。
+
+### 安装
+
+无需安装，直接运行：
+
+```bash
+# Windows：双击 copilot_tokens.bat，或在终端运行
+python copilot_tokens.py
+
+# 也可以全局可用
+# Windows
+copy copilot_tokens.py %USERPROFILE%\scripts\
+# macOS / Linux
+cp copilot_tokens.py ~/.local/bin/ && chmod +x ~/.local/bin/copilot_tokens
+```
+
+### 用法
+
+```
+python copilot_tokens.py                # 最近 7 天会话汇总
+python copilot_tokens.py --days 30      # 最近 30 天
+python copilot_tokens.py --all          # 全部会话
+python copilot_tokens.py --top 5        # token 最多的 5 个会话
+python copilot_tokens.py --session 6ec414c0   # 单会话逐请求明细（支持前缀匹配）
+python copilot_tokens.py --json         # JSON 输出
+python copilot_tokens.py --json --out usage.json   # 导出 UTF-8 JSON 文件
+python copilot_tokens.py --root /path/to/User      # 非标准 VS Code "User" 目录
+```
+
+### 输出示例
+
+```
+会话         时间              请求        输入       输出       缓存        总计  模型 / 标题
+──────────────────────────────────────────────────────────────────────────────────────────
+6ec414c0 09-18 19:07     37      2.9M      60k        0      3.0M  qwen3.8-27b×37  帮我写一个脚本…
+a8ba8abd 09-18 18:34      1     9,360      157        0     9,517  qwen3.8-27b  你是谁
+──────────────────────────────────────────────────────────────────────────────────────────
+合计                         38      2.9M      60k        0      3.0M  2 个会话
+```
+
+明细视图（`--session <id>`）：
+
+```
+会话 a8ba8abd-…
+  版本:   VS Code 1.138.0 / Copilot 0.66.0
+  时间:   09-18 17:49 → 09-18 18:34
+  标题:   你是谁
+
+  # 时间                耗时        输入      输出      缓存  模型
+──────────────────────────────────────────────────────────────
+  1 09-18 18:13     5.6s     9,360     157        0  qwen3.8-27b
+──────────────────────────────────────────────────────────────
+                             9,360     157        0  合计
+```
 
 ## 数据源
 
-脚本自动扫描以下位置（兼容新旧两种布局）：
+扩展与 CLI 都会自动扫描以下位置（兼容新旧两种布局）：
 
 | 布局 | 路径 |
 |---|---|
@@ -167,7 +170,7 @@ extension/
 
 - **缓存 token 未记录**：VS Code 目前不在日志中写入 cache read/write token
   （见 [microsoft/vscode#329657](https://github.com/microsoft/vscode/issues/329657)）。
-  脚本已预留 `cachedTokens` 字段，未来格式支持后会自动生效
+  解析器已预留 `cachedTokens` 字段，未来格式支持后会自动生效
 - 输入 token 为**每次请求的完整上下文**（含系统提示、历史消息、工具结果），
   因此多轮会话的"输入"总量会远大于实际新增内容——这是上下文累积的正常现象
 - 日志格式为 VS Code 内部实现，未公开承诺稳定。若升级 VS Code 后数据缺失，
@@ -175,7 +178,7 @@ extension/
 
 ## 隐私
 
-- 脚本**只读**本地日志文件，不联网、不上传任何数据
+- 工具**只读**本地日志文件，不联网、不上传任何数据
 - 会话标题取自你的第一条用户消息，导出 JSON 前请自行检查是否含敏感内容
 - 请勿将 `main.jsonl` 原始日志提交到任何仓库
 
