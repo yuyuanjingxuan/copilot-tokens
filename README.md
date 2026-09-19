@@ -125,7 +125,9 @@ Want the very latest version before it hits the Marketplace?
 ## Python CLI (zero-install)
 
 Prefer the terminal? A single-file, pure-stdlib Python script (no
-dependencies, Python 3.9+) does the same job.
+dependencies, Python 3.9+) does the same job — including grouping
+sessions removed from the VS Code chat list at the bottom with a
+`[Deleted]` marker (totals still include them).
 
 ### Install
 

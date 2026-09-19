@@ -12,6 +12,9 @@ All notable changes to the Copilot Tokens extension are documented here.
   activity bar icons with the theme color, so a separate outline icon is
   now used for the activity bar while the full-color logo remains the
   Marketplace / gallery icon
+- **Python CLI**: now also marks and groups deleted sessions at the
+  bottom (reads `session-store.db` via the stdlib `sqlite3`), matching
+  the extension; totals still include them
 
 ## 0.1.4
 
