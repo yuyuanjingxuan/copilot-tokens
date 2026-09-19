@@ -4,10 +4,14 @@ All notable changes to the Copilot Tokens extension are documented here.
 
 ## 0.1.5
 
-- **Fix**: sidebar (activity bar) view could open without data — report
-  pushes are no longer gated on a readiness handshake that the sidebar
-  webview did not reliably complete; the sidebar webview now also keeps
-  its context when hidden so re-opening it does not blank the data
+- **Fix**: sidebar (activity bar) view could open without data — the
+  sidebar webview's scripts never ran because `enableScripts` defaults to
+  `false` for webview views; scripts are now enabled before the HTML is
+  assigned, so the dashboard renders in the sidebar as well
+- **Fix**: activity bar icon rendered as a solid circle — VS Code masks
+  activity bar icons with the theme color, so a separate outline icon is
+  now used for the activity bar while the full-color logo remains the
+  Marketplace / gallery icon
 
 ## 0.1.4
 
@@ -45,7 +49,7 @@ All notable changes to the Copilot Tokens extension are documented here.
 
 - Initial release: themed webview panel with summary cards, per-session
   table, expandable per-request detail
-- Day window (1 / 7 / 30 / all), JSON export
+- Day window (7 / 30 / 90 / all), JSON export
 - English / Chinese UI (auto-detected), 5 panel color themes
 - Parses both new (`globalStorage`) and legacy (`workspaceStorage`)
   Copilot Chat debug log layouts

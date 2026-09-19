@@ -54,7 +54,7 @@ Enable debug log file writing in VS Code settings
   of the status bar; click to open the panel
 - **Auto-refresh** — re-scans the logs every 60 s by default
   (`copilotTokens.autoRefresh`, set `0` to disable)
-- **Day window** — 1 / 7 / 30 days or all sessions
+- **Day window** — 7 / 30 / 90 days or all sessions
 - **JSON export** — save the current report as a UTF-8 JSON file
 - **Theming** — follows your light/dark theme; 5 accent color themes
   (default / green / purple / orange / red), persisted in settings
