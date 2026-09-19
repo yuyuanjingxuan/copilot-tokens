@@ -2,6 +2,14 @@
 
 All notable changes to the Copilot Tokens extension are documented here.
 
+## 0.1.4
+
+- **Fix**: sidebar view could open without data — the first report was
+  pushed before the webview's script finished loading and was lost; the
+  webview now signals readiness and the report is pushed in response
+- **Fix**: `Export JSON` wrote an empty object — the report builder became
+  async in 0.1.3 but the export path was not awaited
+
 ## 0.1.3
 
 - **Activity bar icon** — the dashboard now lives in a sidebar view

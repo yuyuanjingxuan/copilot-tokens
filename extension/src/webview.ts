@@ -331,6 +331,11 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
   });
   document.getElementById('refresh').addEventListener('click', () => send({ type: 'refresh' }));
   document.getElementById('export').addEventListener('click', () => send({ type: 'export' }));
+
+  // Signal that the page script is loaded; the extension pushes the first
+  // report in response (an earlier push would be lost before this listener
+  // exists).
+  send({ type: 'ready' });
 </script>
 </body>
 </html>`;

@@ -10,6 +10,29 @@ let refreshTimer: NodeJS.Timeout | undefined;
 let currentDays: number | null = 7;
 let currentTheme: string = 'default';
 
+/** Webviews whose page script has loaded (sent {type:'ready'}). */
+const readyWebviews = new Set<vscode.Webview>();
+
+function sendTo(webview: vscode.Webview | undefined, msg: unknown): void {
+  if (webview && readyWebviews.has(webview)) void webview.postMessage(msg);
+}
+
+/**
+ * Wire a webview: report pushes are only delivered after the page script
+ * signals readiness (otherwise the first message is lost because the
+ * inline <script> has not registered its message listener yet).
+ */
+function wireWebview(webview: vscode.Webview): void {
+  webview.onDidReceiveMessage(msg => {
+    if (msg.type === 'ready') {
+      readyWebviews.add(webview);
+      void pushReport();
+      return;
+    }
+    handleMessage(msg);
+  });
+}
+
 function getLanguage(): Lang {
   const cfg = vscode.workspace.getConfiguration('copilotTokens');
   const setting = cfg.get<string>('language', 'auto');
@@ -25,8 +48,8 @@ async function buildReport(): Promise<UsageReport> {
 
 async function pushReport(): Promise<UsageReport | undefined> {
   const report = await buildReport();
-  if (panel) panel.webview.postMessage({ type: 'report', report });
-  if (view) view.webview.postMessage({ type: 'report', report });
+  sendTo(panel?.webview, { type: 'report', report });
+  sendTo(view?.webview, { type: 'report', report });
   updateStatusBar(report);
   return report;
 }
@@ -59,8 +82,8 @@ function handleMessage(msg: any): void {
         if (report) {
           const s = getStrings(getLanguage());
           const text = `${s.refreshed} · ${s.sessions} ${report.totals.sessions} · ${s.total} ${report.totals.totalTokens.toLocaleString()}`;
-          panel?.webview.postMessage({ type: 'toast', text });
-          view?.webview.postMessage({ type: 'toast', text });
+          sendTo(panel?.webview, { type: 'toast', text });
+          sendTo(view?.webview, { type: 'toast', text });
         }
       });
       break;
@@ -98,19 +121,22 @@ function ensurePanel(): vscode.WebviewPanel {
     vscode.ViewColumn.One,
     { enableScripts: true, retainContextWhenHidden: true },
   );
-  panel.webview.html = webviewHtml(strings, panel.webview.cspSource);
+  const webview = panel.webview;
+  webview.html = webviewHtml(strings, webview.cspSource);
 
-  panel.webview.onDidReceiveMessage(handleMessage);
+  wireWebview(webview);
 
-  panel.onDidDispose(() => { panel = undefined; });
-  pushReport();
+  panel.onDidDispose(() => {
+    readyWebviews.delete(webview);
+    panel = undefined;
+  });
   return panel;
 }
 
 async function exportJson(): Promise<void> {
   const strings = getStrings(getLanguage());
   try {
-    const report = buildReport();
+    const report = await buildReport();
     const uri = await vscode.window.showSaveDialog({
       defaultUri: vscode.Uri.file(
         vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
@@ -121,9 +147,11 @@ async function exportJson(): Promise<void> {
     });
     if (!uri) return;
     await vscode.workspace.fs.writeFile(uri, Buffer.from(JSON.stringify(report, null, 2), 'utf8'));
-    panel?.webview.postMessage({ type: 'toast', text: strings.exportDone });
+    sendTo(panel?.webview, { type: 'toast', text: strings.exportDone });
+    sendTo(view?.webview, { type: 'toast', text: strings.exportDone });
   } catch {
-    panel?.webview.postMessage({ type: 'toast', text: strings.exportFailed });
+    sendTo(panel?.webview, { type: 'toast', text: strings.exportFailed });
+    sendTo(view?.webview, { type: 'toast', text: strings.exportFailed });
   }
 }
 
@@ -132,11 +160,11 @@ class TokensViewProvider implements vscode.WebviewViewProvider {
     view = webviewView;
     const strings = getStrings(getLanguage());
     webviewView.webview.html = webviewHtml(strings, webviewView.webview.cspSource);
-    webviewView.webview.onDidReceiveMessage(handleMessage);
+    wireWebview(webviewView.webview);
     webviewView.onDidDispose(() => {
+      readyWebviews.delete(webviewView.webview);
       if (view === webviewView) view = undefined;
     });
-    void pushReport();
   }
 }
 
