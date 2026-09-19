@@ -14,7 +14,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 FIXTURE_USER = ROOT / "tests" / "fixtures" / "user"
-SCRIPT = ROOT / "copilot_tokens.py"
+SCRIPT = ROOT / "cli" / "copilot_tokens.py"
 
 
 def run(*extra: str) -> str:

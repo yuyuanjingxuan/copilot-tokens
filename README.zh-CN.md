@@ -100,27 +100,27 @@ extension/
 无需安装，直接运行：
 
 ```bash
-# Windows：双击 copilot_tokens.bat，或在终端运行
-python copilot_tokens.py
+# Windows：双击 cli/copilot_tokens.bat，或在终端运行
+python cli/copilot_tokens.py
 
 # 也可以全局可用
 # Windows
-copy copilot_tokens.py %USERPROFILE%\scripts\
+copy cli\copilot_tokens.py %USERPROFILE%\scripts\
 # macOS / Linux
-cp copilot_tokens.py ~/.local/bin/ && chmod +x ~/.local/bin/copilot_tokens
+cp cli/copilot_tokens.py ~/.local/bin/ && chmod +x ~/.local/bin/copilot_tokens
 ```
 
 ### 用法
 
 ```
-python copilot_tokens.py                # 最近 7 天会话汇总
-python copilot_tokens.py --days 30      # 最近 30 天
-python copilot_tokens.py --all          # 全部会话
-python copilot_tokens.py --top 5        # token 最多的 5 个会话
-python copilot_tokens.py --session 6ec414c0   # 单会话逐请求明细（支持前缀匹配）
-python copilot_tokens.py --json         # JSON 输出
-python copilot_tokens.py --json --out usage.json   # 导出 UTF-8 JSON 文件
-python copilot_tokens.py --root /path/to/User      # 非标准 VS Code "User" 目录
+python cli/copilot_tokens.py             # 最近 7 天会话汇总
+python cli/copilot_tokens.py --days 30   # 最近 30 天
+python cli/copilot_tokens.py --all       # 全部会话
+python cli/copilot_tokens.py --top 5     # token 最多的 5 个会话
+python cli/copilot_tokens.py --session 6ec414c0   # 单会话逐请求明细（支持前缀匹配）
+python cli/copilot_tokens.py --json      # JSON 输出
+python cli/copilot_tokens.py --json --out usage.json   # 导出 UTF-8 JSON 文件
+python cli/copilot_tokens.py --root /path/to/User      # 非标准 VS Code "User" 目录
 ```
 
 ### 输出示例

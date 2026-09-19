@@ -107,27 +107,27 @@ dependencies, Python 3.9+) does the same job.
 Nothing to install — just run it:
 
 ```bash
-# Windows: double-click copilot_tokens.bat, or run in a terminal
-python copilot_tokens.py
+# Windows: double-click cli/copilot_tokens.bat, or run in a terminal
+python cli/copilot_tokens.py
 
 # Optional: make it available globally
 # Windows
-copy copilot_tokens.py %USERPROFILE%\scripts\
+copy cli\copilot_tokens.py %USERPROFILE%\scripts\
 # macOS / Linux
-cp copilot_tokens.py ~/.local/bin/ && chmod +x ~/.local/bin/copilot_tokens
+cp cli/copilot_tokens.py ~/.local/bin/ && chmod +x ~/.local/bin/copilot_tokens
 ```
 
 ### Usage
 
 ```
-python copilot_tokens.py                # sessions from the last 7 days
-python copilot_tokens.py --days 30      # last 30 days
-python copilot_tokens.py --all          # all sessions
-python copilot_tokens.py --top 5        # top 5 sessions by total tokens
-python copilot_tokens.py --session 6ec414c0   # per-request detail (prefix match)
-python copilot_tokens.py --json         # JSON output
-python copilot_tokens.py --json --out usage.json   # export UTF-8 JSON file
-python copilot_tokens.py --root /path/to/User      # non-standard VS Code "User" dir
+python cli/copilot_tokens.py             # sessions from the last 7 days
+python cli/copilot_tokens.py --days 30   # last 30 days
+python cli/copilot_tokens.py --all       # all sessions
+python cli/copilot_tokens.py --top 5     # top 5 sessions by total tokens
+python cli/copilot_tokens.py --session 6ec414c0   # per-request detail (prefix match)
+python cli/copilot_tokens.py --json      # JSON output
+python cli/copilot_tokens.py --json --out usage.json   # export UTF-8 JSON file
+python cli/copilot_tokens.py --root /path/to/User      # non-standard VS Code "User" dir
 ```
 
 ### Sample output

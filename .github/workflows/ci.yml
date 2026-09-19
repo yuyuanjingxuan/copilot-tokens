@@ -21,7 +21,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Syntax check
-        run: python -m py_compile copilot_tokens.py
+        run: python -m py_compile cli/copilot_tokens.py
 
       - name: Smoke test (fixture logs)
         run: python tests/test_smoke.py
@@ -29,9 +29,9 @@ jobs:
       - name: Coverage
         run: |
           python -m pip install --quiet coverage
-          python -m coverage run copilot_tokens.py --root tests/fixtures/user --all > /dev/null
-          python -m coverage run --append copilot_tokens.py --root tests/fixtures/user --all --json > /dev/null
-          python -m coverage run --append copilot_tokens.py --root tests/fixtures/user --session test-sid-0001 > /dev/null
+          python -m coverage run cli/copilot_tokens.py --root tests/fixtures/user --all > /dev/null
+          python -m coverage run --append cli/copilot_tokens.py --root tests/fixtures/user --all --json > /dev/null
+          python -m coverage run --append cli/copilot_tokens.py --root tests/fixtures/user --session test-sid-0001 > /dev/null
           python -m coverage report -m
 
   extension:

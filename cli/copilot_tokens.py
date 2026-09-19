@@ -7,13 +7,13 @@ copilot_tokens.py — VS Code Copilot Chat token usage tracker
 Parses the built-in Copilot Chat debug logs (main.jsonl) and aggregates
 token usage per session. Pure stdlib, zero dependencies. Run directly:
 
-    python copilot_tokens.py                # sessions from the last 7 days
-    python copilot_tokens.py --days 30      # last 30 days
-    python copilot_tokens.py --all          # all sessions
-    python copilot_tokens.py --session 6ec414c0   # per-request detail
-    python copilot_tokens.py --json         # JSON output
-    python copilot_tokens.py --top 5        # top 5 sessions by total tokens
-    python copilot_tokens.py --root DIR     # non-standard VS Code "User" dir
+    python cli/copilot_tokens.py             # sessions from the last 7 days
+    python cli/copilot_tokens.py --days 30   # last 30 days
+    python cli/copilot_tokens.py --all       # all sessions
+    python cli/copilot_tokens.py --session 6ec414c0   # per-request detail
+    python cli/copilot_tokens.py --json      # JSON output
+    python cli/copilot_tokens.py --top 5     # top 5 sessions by total tokens
+    python cli/copilot_tokens.py --root DIR  # non-standard VS Code "User" dir
 
 Data sources (auto-discovered, both layouts supported):
   1. %APPDATA%/Code/User/globalStorage/github.copilot-chat/debug-logs/<sid>/main.jsonl   (VS Code 1.13x+)
@@ -358,9 +358,9 @@ def main() -> int:
         description="VS Code Copilot Chat token usage tracker",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="Examples:\n"
-               "  python copilot_tokens.py --days 30\n"
-               "  python copilot_tokens.py --session 6ec414c0\n"
-               "  python copilot_tokens.py --json > usage.json\n",
+               "  python cli/copilot_tokens.py --days 30\n"
+               "  python cli/copilot_tokens.py --session 6ec414c0\n"
+               "  python cli/copilot_tokens.py --json > usage.json\n",
     )
     ap.add_argument("--days", type=float, default=7, help="only show sessions from the last N days (default 7)")
     ap.add_argument("--all", action="store_true", help="show all sessions (ignore --days)")
