@@ -6,6 +6,7 @@
 
 [![CI](https://github.com/yuyuanjingxuan/copilot-tokens/actions/workflows/ci.yml/badge.svg)](https://github.com/yuyuanjingxuan/copilot-tokens/actions/workflows/ci.yml)
 [![Coverage](https://coveralls.io/repos/github/yuyuanjingxuan/copilot-tokens/badge.svg)](https://coveralls.io/github/yuyuanjingxuan/copilot-tokens)
+[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/yuyuanjingxuan.copilot-tokens.svg)](https://marketplace.visualstudio.com/items?itemName=yuyuanjingxuan.copilot-tokens)
 [![VS Code](https://img.shields.io/badge/VS_Code-%E2%89%A51.85-blue.svg)](https://code.visualstudio.com/)
 [![Python](https://img.shields.io/badge/Python-3.9--3.13-blue.svg)](https://www.python.org/)
 [![Dependencies](https://img.shields.io/badge/dependencies-none-brightgreen.svg)]()
@@ -58,18 +59,32 @@ extension/
 └── tsconfig.json
 ```
 
-### 安装（.vsix）
+### 安装（Marketplace）
+
+1. 打开扩展面板（<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>X</kbd>）
+2. 搜索 **Copilot Tokens**，点击 **Install**
+   （或直接访问
+   [市场页面](https://marketplace.visualstudio.com/items?itemName=yuyuanjingxuan.copilot-tokens)）
+3. 运行命令 **Copilot Tokens: Show Usage**
+
+后续更新会通过 Marketplace 自动推送。
+
+### 安装（.vsix，手动）
+
+想手动安装指定版本？
 
 1. 从 [最新 Release](https://github.com/yuyuanjingxuan/copilot-tokens/releases)
    下载 `copilot-tokens-x.y.z.vsix`
 2. <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> → **Extensions: Install from VSIX…** → 选择该文件
 3. 运行命令 **Copilot Tokens: Show Usage**
 
-### 试用（F5）
+### 开发模式（F5，尝鲜最新版）
 
-1. 用 VS Code 打开 `extension/` 文件夹
+想用上 Marketplace 还没发布的最新版？
+
+1. 克隆本仓库，用 VS Code 打开 `extension/` 文件夹
 2. 运行 `npm install`
-3. 按 <kbd>F5</kbd>（Run Extension）——会打开第二个 VS Code 窗口
+3. 按 <kbd>F5</kbd>（Run Extension）——会打开一个加载了开发版构建的第二个 VS Code 窗口
 4. 在该窗口中运行命令 **Copilot Tokens: Show Usage**
 
 ### 命令
@@ -87,8 +102,6 @@ extension/
 | `copilotTokens.days` | `7` | 打开面板时的默认天数窗口 |
 | `copilotTokens.language` | `auto` | 界面语言：`auto` / `en` / `zh-CN` |
 | `copilotTokens.theme` | `default` | 面板配色：`default` / `green` / `purple` / `orange` / `red` |
-
-> 扩展以 `.vsix` 形式通过 GitHub Releases 分发（尚未发布到 Marketplace）。
 
 ## Python CLI（零安装）
 

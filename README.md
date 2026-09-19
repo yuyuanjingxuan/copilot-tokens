@@ -6,6 +6,7 @@
 
 [![CI](https://github.com/yuyuanjingxuan/copilot-tokens/actions/workflows/ci.yml/badge.svg)](https://github.com/yuyuanjingxuan/copilot-tokens/actions/workflows/ci.yml)
 [![Coverage](https://coveralls.io/repos/github/yuyuanjingxuan/copilot-tokens/badge.svg)](https://coveralls.io/github/yuyuanjingxuan/copilot-tokens)
+[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/yuyuanjingxuan.copilot-tokens.svg)](https://marketplace.visualstudio.com/items?itemName=yuyuanjingxuan.copilot-tokens)
 [![VS Code](https://img.shields.io/badge/VS_Code-%E2%89%A51.85-blue.svg)](https://code.visualstudio.com/)
 [![Python](https://img.shields.io/badge/Python-3.9--3.13-blue.svg)](https://www.python.org/)
 [![Dependencies](https://img.shields.io/badge/dependencies-none-brightgreen.svg)]()
@@ -64,18 +65,33 @@ extension/
 └── tsconfig.json
 ```
 
-### Install (.vsix)
+### Install (Marketplace)
+
+1. Open the Extensions view (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>X</kbd>)
+2. Search for **Copilot Tokens** and click **Install**
+   (or go straight to the
+   [marketplace listing](https://marketplace.visualstudio.com/items?itemName=yuyuanjingxuan.copilot-tokens))
+3. Run the command **Copilot Tokens: Show Usage**
+
+Updates are delivered automatically through the Marketplace.
+
+### Install (.vsix, manual)
+
+Prefer to install a specific version by hand?
 
 1. Download `copilot-tokens-x.y.z.vsix` from the
    [latest release](https://github.com/yuyuanjingxuan/copilot-tokens/releases)
 2. <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> → **Extensions: Install from VSIX…** → pick the file
 3. Run the command **Copilot Tokens: Show Usage**
 
-### Try it (F5)
+### Develop from source (F5)
 
-1. Open the `extension/` folder in VS Code
+Want the very latest version before it hits the Marketplace?
+
+1. Clone this repo and open the `extension/` folder in VS Code
 2. Run `npm install`
-3. Press <kbd>F5</kbd> (Run Extension) — a second VS Code window opens
+3. Press <kbd>F5</kbd> (Run Extension) — a second VS Code window opens with
+   the dev build
 4. In that window, run the command **Copilot Tokens: Show Usage**
 
 ### Commands
@@ -93,9 +109,6 @@ extension/
 | `copilotTokens.days` | `7` | Default day window when opening the panel |
 | `copilotTokens.language` | `auto` | UI language: `auto` / `en` / `zh-CN` |
 | `copilotTokens.theme` | `default` | Panel color theme: `default` / `green` / `purple` / `orange` / `red` |
-
-> The extension is distributed as a `.vsix` via GitHub Releases (not yet
-> published to the Marketplace).
 
 ## Python CLI (zero-install)
 
