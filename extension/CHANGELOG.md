@@ -2,6 +2,13 @@
 
 All notable changes to the Copilot Tokens extension are documented here.
 
+## 0.1.5
+
+- **Fix**: sidebar (activity bar) view could open without data — report
+  pushes are no longer gated on a readiness handshake that the sidebar
+  webview did not reliably complete; the sidebar webview now also keeps
+  its context when hidden so re-opening it does not blank the data
+
 ## 0.1.4
 
 - **Fix**: sidebar view could open without data — the first report was

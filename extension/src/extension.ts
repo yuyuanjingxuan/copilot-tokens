@@ -10,22 +10,19 @@ let refreshTimer: NodeJS.Timeout | undefined;
 let currentDays: number | null = 7;
 let currentTheme: string = 'default';
 
-/** Webviews whose page script has loaded (sent {type:'ready'}). */
-const readyWebviews = new Set<vscode.Webview>();
-
 function sendTo(webview: vscode.Webview | undefined, msg: unknown): void {
-  if (webview && readyWebviews.has(webview)) void webview.postMessage(msg);
+  if (webview) void webview.postMessage(msg);
 }
 
 /**
- * Wire a webview: report pushes are only delivered after the page script
- * signals readiness (otherwise the first message is lost because the
- * inline <script> has not registered its message listener yet).
+ * Wire a webview. When the page script finishes loading it sends
+ * {type:'ready'}; we push a fresh report in response so the first paint
+ * has data. Reports are also pushed unconditionally on every refresh, so
+ * a missed handshake can never leave a view blank.
  */
 function wireWebview(webview: vscode.Webview): void {
   webview.onDidReceiveMessage(msg => {
     if (msg.type === 'ready') {
-      readyWebviews.add(webview);
       void pushReport();
       return;
     }
@@ -127,7 +124,6 @@ function ensurePanel(): vscode.WebviewPanel {
   wireWebview(webview);
 
   panel.onDidDispose(() => {
-    readyWebviews.delete(webview);
     panel = undefined;
   });
   return panel;
@@ -162,9 +158,11 @@ class TokensViewProvider implements vscode.WebviewViewProvider {
     webviewView.webview.html = webviewHtml(strings, webviewView.webview.cspSource);
     wireWebview(webviewView.webview);
     webviewView.onDidDispose(() => {
-      readyWebviews.delete(webviewView.webview);
       if (view === webviewView) view = undefined;
     });
+    // Push immediately; if the page script is not ready yet the message is
+    // dropped harmlessly and the {type:'ready'} handler pushes again.
+    void pushReport();
   }
 }
 
@@ -189,7 +187,9 @@ export function activate(context: vscode.ExtensionContext): void {
       ensurePanel();
       void exportJson();
     }),
-    vscode.window.registerWebviewViewProvider('copilotTokens.view', new TokensViewProvider()),
+    vscode.window.registerWebviewViewProvider('copilotTokens.view', new TokensViewProvider(), {
+      webviewOptions: { retainContextWhenHidden: true },
+    }),
     vscode.workspace.onDidChangeConfiguration(e => {
       if (e.affectsConfiguration('copilotTokens.autoRefresh')) {
         startAutoRefresh();
