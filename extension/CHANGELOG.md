@@ -2,6 +2,15 @@
 
 All notable changes to the Copilot Tokens extension are documented here.
 
+## 0.1.6
+
+- **Fix**: sidebar (activity bar) view showed no data rows — the
+  module-level `view` reference was not assigned in
+  `resolveWebviewView` (lost during a code cleanup in 0.1.5), so
+  `pushReport` could not reach the sidebar webview and only the static
+  HTML rendered; the reference is assigned again (see
+  [issue #1](https://github.com/yuyuanjingxuan/copilot-tokens/issues/1))
+
 ## 0.1.5
 
 - **Fix**: sidebar (activity bar) view could open without data — the

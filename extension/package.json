@@ -2,7 +2,7 @@
   "name": "copilot-tokens",
   "displayName": "Copilot Tokens",
   "description": "Token usage tracker for VS Code Copilot Chat — parses built-in debug logs and shows per-session input/output tokens, models, and latency.",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "publisher": "yuyuanjingxuan",
   "license": "MIT",
   "icon": "icon.png",
