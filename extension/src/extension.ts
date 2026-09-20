@@ -149,6 +149,7 @@ class TokensViewProvider implements vscode.WebviewViewProvider {
     // false: static HTML renders but <script> is silently NOT executed. It
     // must be enabled on the options BEFORE assigning html.
     webviewView.webview.options = { enableScripts: true };
+    view = webviewView;
     const strings = getStrings(getLanguage());
     webviewView.webview.html = webviewHtml(strings, webviewView.webview.cspSource);
     wireWebview(webviewView.webview);
