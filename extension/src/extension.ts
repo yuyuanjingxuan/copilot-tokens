@@ -11,6 +11,7 @@ let currentDays: number | null = 7;
 let currentTheme: string = 'default';
 let currentChartType: string = 'bar';
 let currentChartMetric: string = 'total';
+let currentChartLogScale = false;
 let sessionCache: { sessions: Session[]; at: number } | undefined;
 const SESSION_CACHE_TTL_MS = 30_000;
 
@@ -46,6 +47,7 @@ async function buildReport(force = false): Promise<UsageReport> {
   report.theme = currentTheme;
   report.chartType = currentChartType;
   report.chartMetric = currentChartMetric;
+  report.chartLogScale = currentChartLogScale;
   return report;
 }
 
@@ -100,6 +102,10 @@ function handleMessage(msg: any): void {
       currentChartMetric = msg.chartMetric;
       vscode.workspace.getConfiguration('copilotTokens').update('chartType', msg.chartType, true);
       vscode.workspace.getConfiguration('copilotTokens').update('chartMetric', msg.chartMetric, true);
+      break; // webview re-renders the chart locally; no re-parse needed
+    case 'setChartLog':
+      currentChartLogScale = msg.log;
+      vscode.workspace.getConfiguration('copilotTokens').update('chartLogScale', msg.log, true);
       break; // webview re-renders the chart locally; no re-parse needed
     case 'refresh': {
       void pushReport(true).then(report => {
@@ -202,6 +208,7 @@ export function activate(context: vscode.ExtensionContext): void {
   currentTheme = cfg.get<string>('theme', 'default');
   currentChartType = cfg.get<string>('chartType', 'bar');
   currentChartMetric = cfg.get<string>('chartMetric', 'total');
+  currentChartLogScale = cfg.get<boolean>('chartLogScale', false);
 
   statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
   statusBar.command = 'copilotTokens.show';
@@ -227,13 +234,15 @@ export function activate(context: vscode.ExtensionContext): void {
         e.affectsConfiguration('copilotTokens.days') ||
         e.affectsConfiguration('copilotTokens.theme') ||
         e.affectsConfiguration('copilotTokens.chartType') ||
-        e.affectsConfiguration('copilotTokens.chartMetric')
+        e.affectsConfiguration('copilotTokens.chartMetric') ||
+        e.affectsConfiguration('copilotTokens.chartLogScale')
       ) {
         const c = vscode.workspace.getConfiguration('copilotTokens');
         currentDays = c.get<number>('days', 7);
         currentTheme = c.get<string>('theme', 'default');
         currentChartType = c.get<string>('chartType', 'bar');
         currentChartMetric = c.get<string>('chartMetric', 'total');
+        currentChartLogScale = c.get<boolean>('chartLogScale', false);
         void pushReport();
       }
     }),

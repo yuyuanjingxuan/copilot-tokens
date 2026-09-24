@@ -61,7 +61,7 @@ red, persisted in settings).
   table with a "Deleted" badge
 - **Daily usage chart** — per-day bar / line / area chart of token usage
   over the selected window, with a metric switch (total tokens, input +
-  output, requests) and hover tooltips
+  output, requests), hover tooltips, and an optional log-scale y-axis
 
 ![Extension preview](docs/extension-preview.png)
 
@@ -126,6 +126,7 @@ Want the very latest version before it hits the Marketplace?
 | `copilotTokens.theme` | `default` | Panel color theme: `default` / `green` / `purple` / `orange` / `red` |
 | `copilotTokens.chartType` | `bar` | Daily chart type: `bar` / `line` / `area` |
 | `copilotTokens.chartMetric` | `total` | Daily chart metric: `total` / `stacked` / `requests` |
+| `copilotTokens.chartLogScale` | `false` | Logarithmic y-axis for the daily chart |
 
 ## Python CLI (zero-install)
 

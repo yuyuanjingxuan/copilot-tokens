@@ -160,6 +160,10 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
   .chart-wrap { margin-bottom: 18px; }
   .chart-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
   .chart-head .chart-title { font-size: 12px; font-weight: 600; opacity: 0.8; margin-right: auto; }
+  .chart-log { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; opacity: 0.8; cursor: pointer; }
+  .chart-log input { accent-color: var(--ct-accent); margin: 0; }
+  .chart-legend { display: flex; align-items: center; font-size: 11px; opacity: 0.8; }
+  .chart-legend .dot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin: 0 4px 0 10px; }
   .chart-box {
     background: var(--ct-card-bg);
     border: 1px solid var(--ct-border);
@@ -235,6 +239,8 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
         <option value="stacked">${strings.chartStacked}</option>
         <option value="requests">${strings.chartRequests}</option>
       </select>
+      <label class="chart-log" for="chartLogScale"><input type="checkbox" id="chartLogScale"> ${strings.chartLogScale}</label>
+      <div class="chart-legend" id="chartLegend"></div>
     </div>
     <div class="chart-box" id="chartBox"></div>
   </div>
@@ -260,6 +266,7 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
   let openSid = null;
   let chartType = 'bar';
   let chartMetric = 'total';
+  let chartLogScale = false;
 
   function send(msg) { vscode.postMessage(msg); }
 
@@ -449,14 +456,22 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
       return { total: b.input + b.output, input: b.input, output: b.output };
     });
     const maxV = niceMax(Math.max(...vals.map(v => v.total)));
-    const y = v => padT + plotH - (v / maxV) * plotH;
+    const logScale = chartLogScale;
+    const axisMax = logScale
+      ? Math.pow(10, Math.max(1, Math.ceil(Math.log10(Math.max(maxV, 1)))))
+      : maxV;
+    const y = v => logScale
+      ? padT + plotH - (Math.log10(Math.max(v, 1)) / Math.log10(axisMax)) * plotH
+      : padT + plotH - (v / axisMax) * plotH;
     const x = i => padL + slot * i + slot / 2;
 
     let svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">';
 
-    // Gridlines + y-axis labels (4 divisions).
-    for (let g = 0; g <= 4; g++) {
-      const gv = (maxV / 4) * g;
+    // Gridlines + y-axis labels (powers of 10 for log scale, 4 divisions otherwise).
+    const gridVals = logScale
+      ? Array.from({ length: Math.log10(axisMax) + 1 }, (_, p) => Math.pow(10, p))
+      : [0, 1, 2, 3, 4].map(g => (axisMax / 4) * g);
+    for (const gv of gridVals) {
       const gy = y(gv);
       svg += '<line x1="' + padL + '" y1="' + gy + '" x2="' + (W - padR) + '" y2="' + gy + '" stroke="var(--ct-border)" stroke-width="1" opacity="0.5"/>';
       svg += '<text x="' + (padL - 6) + '" y="' + (gy + 3) + '" text-anchor="end" font-size="9" fill="var(--ct-fg)" opacity="0.6">' + fmtAxis(gv) + '</text>';
@@ -475,23 +490,31 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
         const v = vals[i];
         const bx = x(i) - barW / 2;
         if (chartMetric === 'stacked') {
-          const hIn = (v.input / maxV) * plotH;
-          const hOut = (v.output / maxV) * plotH;
+          const hIn = (padT + plotH) - y(v.input);
+          const hOut = y(v.input) - y(v.total);
           svg += '<rect x="' + bx + '" y="' + y(v.input) + '" width="' + barW + '" height="' + hIn + '" fill="' + C_IN + '" rx="1"/>';
           svg += '<rect x="' + bx + '" y="' + y(v.total) + '" width="' + barW + '" height="' + hOut + '" fill="' + C_OUT + '" rx="1"/>';
         } else {
-          svg += '<rect x="' + bx + '" y="' + y(v.total) + '" width="' + barW + '" height="' + ((v.total / maxV) * plotH) + '" fill="' + (chartMetric === 'requests' ? C_IN : C_TOTAL) + '" rx="1"/>';
+          svg += '<rect x="' + bx + '" y="' + y(v.total) + '" width="' + barW + '" height="' + ((padT + plotH) - y(v.total)) + '" fill="' + (chartMetric === 'requests' ? C_IN : C_TOTAL) + '" rx="1"/>';
         }
       }
     } else {
-      // line / area
-      const pts = vals.map((v, i) => x(i) + ',' + y(v.total)).join(' ');
-      if (chartType === 'area') {
-        svg += '<polygon points="' + padL + ',' + y(0) + ' ' + pts + ' ' + (W - padR) + ',' + y(0) + '" fill="' + C_TOTAL + '" opacity="0.25"/>';
-      }
-      svg += '<polyline points="' + pts + '" fill="none" stroke="' + C_TOTAL + '" stroke-width="2"/>';
-      for (let i = 0; i < n; i++) {
-        svg += '<circle cx="' + x(i) + '" cy="' + y(vals[i].total) + '" r="2.5" fill="' + C_TOTAL + '"/>';
+      // line / area — the "Input + Output" metric draws both series
+      const drawSeries = (key, color) => {
+        const pts = vals.map((v, i) => x(i) + ',' + y(v[key])).join(' ');
+        if (chartType === 'area') {
+          svg += '<polygon points="' + padL + ',' + (padT + plotH) + ' ' + pts + ' ' + (W - padR) + ',' + (padT + plotH) + '" fill="' + color + '" opacity="0.2"/>';
+        }
+        svg += '<polyline points="' + pts + '" fill="none" stroke="' + color + '" stroke-width="2"/>';
+        for (let i = 0; i < n; i++) {
+          svg += '<circle cx="' + x(i) + '" cy="' + y(vals[i][key]) + '" r="2.5" fill="' + color + '"/>';
+        }
+      };
+      if (chartMetric === 'stacked') {
+        drawSeries('input', C_IN);
+        drawSeries('output', C_OUT);
+      } else {
+        drawSeries('total', C_TOTAL);
       }
     }
 
@@ -501,6 +524,12 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
     }
     svg += '</svg>';
     box.innerHTML = svg + '<div class="chart-tip" id="chartTip"></div>';
+
+    document.getElementById('chartLegend').innerHTML =
+      (chartMetric === 'stacked' && chartType !== 'bar')
+        ? '<span class="dot" style="background:' + C_IN + '"></span>' + esc(S.input) +
+          '<span class="dot" style="background:' + C_OUT + '"></span>' + esc(S.output)
+        : '';
 
     const tip = document.getElementById('chartTip');
     box.querySelectorAll('.chart-hit').forEach(hit => {
@@ -545,10 +574,12 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
       openSid = null;
       chartType = msg.report.chartType || 'bar';
       chartMetric = msg.report.chartMetric || 'total';
+      chartLogScale = !!msg.report.chartLogScale;
       document.getElementById('days').value = String(msg.report.days ?? 'all');
       document.getElementById('theme').value = msg.report.theme || 'default';
       document.getElementById('chartType').value = chartType;
       document.getElementById('chartMetric').value = chartMetric;
+      document.getElementById('chartLogScale').checked = chartLogScale;
       document.body.dataset.theme = msg.report.theme || 'default';
       render();
     } else if (msg.type === 'toast') {
@@ -576,6 +607,11 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
   document.getElementById('chartMetric').addEventListener('change', e => {
     chartMetric = e.target.value;
     sendChart();
+    renderChart(); // re-render locally for an instant switch
+  });
+  document.getElementById('chartLogScale').addEventListener('change', e => {
+    chartLogScale = e.target.checked;
+    send({ type: 'setChartLog', log: chartLogScale });
     renderChart(); // re-render locally for an instant switch
   });
   document.getElementById('refresh').addEventListener('click', () => send({ type: 'refresh' }));

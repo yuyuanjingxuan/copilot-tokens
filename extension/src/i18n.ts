@@ -38,6 +38,7 @@ export interface Strings {
   chartTotal: string;
   chartStacked: string;
   chartRequests: string;
+  chartLogScale: string;
 }
 
 const en: Strings = {
@@ -78,6 +79,7 @@ const en: Strings = {
   chartTotal: 'Total tokens',
   chartStacked: 'Input + Output',
   chartRequests: 'Requests',
+  chartLogScale: 'Log scale',
 };
 
 const zh: Strings = {
@@ -118,6 +120,7 @@ const zh: Strings = {
   chartTotal: '总 token',
   chartStacked: '输入 + 输出',
   chartRequests: '请求数',
+  chartLogScale: '对数刻度',
 };
 
 export function getStrings(lang: Lang): Strings {

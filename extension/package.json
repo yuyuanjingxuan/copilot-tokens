@@ -112,6 +112,11 @@
           ],
           "default": "total",
           "description": "Metric shown in the daily usage chart."
+        },
+        "copilotTokens.chartLogScale": {
+          "type": "boolean",
+          "default": false,
+          "description": "Use a logarithmic y-axis for the daily usage chart (makes small values visible next to large ones)."
         }
       }
     }

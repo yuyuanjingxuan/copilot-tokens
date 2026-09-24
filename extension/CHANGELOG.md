@@ -7,9 +7,12 @@ All notable changes to the Copilot Tokens extension are documented here.
 - **Feature**: daily usage chart — a per-day chart of token usage over the
   selected window, with a type switch (bar / line / area) and a metric
   switch (total tokens, input + output stacked, request count); hover a
-  bar or point for the exact date, tokens, and request count. Windows
-  longer than 180 days aggregate by week. Choices persist via the new
-  `copilotTokens.chartType` and `copilotTokens.chartMetric` settings
+  bar or point for the exact date, tokens, and request count. The
+  "Input + Output" metric draws input and output as two separate series
+  in line/area mode. Windows longer than 180 days aggregate by week.
+  Choices persist via the new `copilotTokens.chartType`,
+  `copilotTokens.chartMetric`, and `copilotTokens.chartLogScale`
+  (optional logarithmic y-axis) settings
 
 ## 0.1.6
 
