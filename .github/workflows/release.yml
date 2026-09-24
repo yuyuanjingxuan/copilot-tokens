@@ -42,8 +42,25 @@ jobs:
         id: vsix
         run: echo "path=$(ls extension/*.vsix)" >> "$GITHUB_OUTPUT"
 
+      - name: Build release notes from CHANGELOG
+        # The release body mirrors the matching "## <version>" section of
+        # extension/CHANGELOG.md so GitHub Releases and the changelog never
+        # drift apart. Falls back to a pointer when the section is missing.
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          awk -v ver="$VERSION" '
+            $0 == "## " ver { found=1; next }
+            found && /^## / { exit }
+            found { print }
+          ' extension/CHANGELOG.md > release-notes.md
+          if [ ! -s release-notes.md ]; then
+            echo "See extension/CHANGELOG.md in the repository for this release." > release-notes.md
+          fi
+          echo "" >> release-notes.md
+          echo "**Full Changelog**: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/releases/tag/${GITHUB_REF_NAME}" >> release-notes.md
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: ${{ steps.vsix.outputs.path }}
-          generate_release_notes: true
+          body: release-notes.md
