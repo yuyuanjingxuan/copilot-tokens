@@ -1,8 +1,8 @@
 {
   "name": "copilot-tokens",
   "displayName": "Copilot Tokens",
-  "description": "Token usage tracker for VS Code Copilot Chat — parses built-in debug logs and shows per-session input/output tokens, models, and latency.",
-  "version": "0.1.6",
+  "description": "Token usage tracker for VS Code Copilot Chat — parses built-in debug logs and shows per-session input/output tokens, models, latency, and a daily usage chart.",
+  "version": "0.2.0",
   "publisher": "yuyuanjingxuan",
   "license": "MIT",
   "icon": "icon.png",
@@ -92,6 +92,26 @@
           ],
           "default": "default",
           "description": "Accent color theme for the usage panel."
+        },
+        "copilotTokens.chartType": {
+          "type": "string",
+          "enum": [
+            "bar",
+            "line",
+            "area"
+          ],
+          "default": "bar",
+          "description": "Chart type for the daily usage chart."
+        },
+        "copilotTokens.chartMetric": {
+          "type": "string",
+          "enum": [
+            "total",
+            "stacked",
+            "requests"
+          ],
+          "default": "total",
+          "description": "Metric shown in the daily usage chart."
         }
       }
     }

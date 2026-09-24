@@ -48,6 +48,8 @@ export interface UsageReport {
   generatedAt: number;
   days: number | null;   // null = all
   theme: string;
+  chartType: string;     // bar | line | area
+  chartMetric: string;   // total | stacked | requests
   sessions: SessionSummary[];
   totals: {
     sessions: number;
@@ -307,6 +309,8 @@ export function summarize(sessions: Session[], days: number | null): UsageReport
     generatedAt: Date.now(),
     days,
     theme: 'default',
+    chartType: 'bar',
+    chartMetric: 'total',
     sessions: summaries,
     totals: {
       sessions: summaries.length,

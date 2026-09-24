@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { loadSessions, summarize, UsageReport } from './parser';
+import { loadSessions, summarize, UsageReport, Session } from './parser';
 import { getStrings, resolveLanguage, Lang } from './i18n';
 import { webviewHtml } from './webview';
 
@@ -9,6 +9,10 @@ let statusBar: vscode.StatusBarItem | undefined;
 let refreshTimer: NodeJS.Timeout | undefined;
 let currentDays: number | null = 7;
 let currentTheme: string = 'default';
+let currentChartType: string = 'bar';
+let currentChartMetric: string = 'total';
+let sessionCache: { sessions: Session[]; at: number } | undefined;
+const SESSION_CACHE_TTL_MS = 30_000;
 
 function getLanguage(): Lang {
   const cfg = vscode.workspace.getConfiguration('copilotTokens');
@@ -16,15 +20,37 @@ function getLanguage(): Lang {
   return resolveLanguage(setting, vscode.env.language);
 }
 
-async function buildReport(): Promise<UsageReport> {
-  const sessions = await loadSessions(undefined, currentDays);
+/**
+ * Parsed sessions are cached for a short TTL. Re-reading and re-parsing
+ * every main.jsonl on disk for a pure display change (chart type, metric,
+ * theme) is what made switching feel laggy; only days changes, explicit
+ * refresh, and the auto-refresh timer force a reload from disk.
+ */
+async function getSessions(force = false): Promise<Session[]> {
+  if (!force && sessionCache && Date.now() - sessionCache.at < SESSION_CACHE_TTL_MS) {
+    return sessionCache.sessions;
+  }
+  const sessions = await loadSessions(undefined, null);
+  sessionCache = { sessions, at: Date.now() };
+  return sessions;
+}
+
+async function buildReport(force = false): Promise<UsageReport> {
+  const all = await getSessions(force);
+  let sessions = all;
+  if (currentDays !== null) {
+    const cutoff = Date.now() - currentDays * 24 * 60 * 60 * 1000;
+    sessions = all.filter(s => s.lastTs >= cutoff);
+  }
   const report = summarize(sessions, currentDays);
   report.theme = currentTheme;
+  report.chartType = currentChartType;
+  report.chartMetric = currentChartMetric;
   return report;
 }
 
-async function pushReport(): Promise<UsageReport | undefined> {
-  const report = await buildReport();
+async function pushReport(force = false): Promise<UsageReport | undefined> {
+  const report = await buildReport(force);
   if (panel) panel.webview.postMessage({ type: 'report', report });
   if (view) view.webview.postMessage({ type: 'report', report });
   updateStatusBar(report);
@@ -68,10 +94,15 @@ function handleMessage(msg: any): void {
     case 'setTheme':
       currentTheme = msg.theme;
       vscode.workspace.getConfiguration('copilotTokens').update('theme', msg.theme, true);
-      void pushReport();
-      break;
+      break; // webview applies the theme locally; no re-parse needed
+    case 'setChart':
+      currentChartType = msg.chartType;
+      currentChartMetric = msg.chartMetric;
+      vscode.workspace.getConfiguration('copilotTokens').update('chartType', msg.chartType, true);
+      vscode.workspace.getConfiguration('copilotTokens').update('chartMetric', msg.chartMetric, true);
+      break; // webview re-renders the chart locally; no re-parse needed
     case 'refresh': {
-      void pushReport().then(report => {
+      void pushReport(true).then(report => {
         if (report) {
           const s = getStrings(getLanguage());
           const text = `${s.refreshed} · ${s.sessions} ${report.totals.sessions} · ${s.total} ${report.totals.totalTokens.toLocaleString()}`;
@@ -91,7 +122,7 @@ function startAutoRefresh(): void {
   stopAutoRefresh();
   const seconds = vscode.workspace.getConfiguration('copilotTokens').get<number>('autoRefresh', 60);
   if (seconds > 0) {
-    refreshTimer = setInterval(() => void pushReport(), seconds * 1000);
+    refreshTimer = setInterval(() => void pushReport(true), seconds * 1000);
   }
 }
 
@@ -169,6 +200,8 @@ export function activate(context: vscode.ExtensionContext): void {
   const cfg = vscode.workspace.getConfiguration('copilotTokens');
   currentDays = cfg.get<number>('days', 7);
   currentTheme = cfg.get<string>('theme', 'default');
+  currentChartType = cfg.get<string>('chartType', 'bar');
+  currentChartMetric = cfg.get<string>('chartMetric', 'total');
 
   statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
   statusBar.command = 'copilotTokens.show';
@@ -190,10 +223,17 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.workspace.onDidChangeConfiguration(e => {
       if (e.affectsConfiguration('copilotTokens.autoRefresh')) {
         startAutoRefresh();
-      } else if (e.affectsConfiguration('copilotTokens.days') || e.affectsConfiguration('copilotTokens.theme')) {
+      } else if (
+        e.affectsConfiguration('copilotTokens.days') ||
+        e.affectsConfiguration('copilotTokens.theme') ||
+        e.affectsConfiguration('copilotTokens.chartType') ||
+        e.affectsConfiguration('copilotTokens.chartMetric')
+      ) {
         const c = vscode.workspace.getConfiguration('copilotTokens');
         currentDays = c.get<number>('days', 7);
         currentTheme = c.get<string>('theme', 'default');
+        currentChartType = c.get<string>('chartType', 'bar');
+        currentChartMetric = c.get<string>('chartMetric', 'total');
         void pushReport();
       }
     }),

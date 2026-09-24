@@ -59,6 +59,9 @@ red, persisted in settings).
 - **Deleted sessions** — sessions removed from the VS Code chat list are
   still counted (the tokens were consumed) but grouped at the bottom of the
   table with a "Deleted" badge
+- **Daily usage chart** — per-day bar / line / area chart of token usage
+  over the selected window, with a metric switch (total tokens, input +
+  output, requests) and hover tooltips
 
 ![Extension preview](docs/extension-preview.png)
 
@@ -121,6 +124,8 @@ Want the very latest version before it hits the Marketplace?
 | `copilotTokens.autoRefresh` | `60` | Auto-refresh interval in seconds; `0` disables |
 | `copilotTokens.language` | `auto` | UI language: `auto` / `en` / `zh-CN` |
 | `copilotTokens.theme` | `default` | Panel color theme: `default` / `green` / `purple` / `orange` / `red` |
+| `copilotTokens.chartType` | `bar` | Daily chart type: `bar` / `line` / `area` |
+| `copilotTokens.chartMetric` | `total` | Daily chart metric: `total` / `stacked` / `requests` |
 
 ## Python CLI (zero-install)
 

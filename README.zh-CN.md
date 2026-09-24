@@ -51,6 +51,9 @@ VS Code Copilot Chat 的 token 用量统计工具（Windows / macOS / Linux）�
   设为 `0` 关闭）
 - **已删除会话**——从 VS Code 聊天列表删除的会话仍计入统计（token 已消耗），
   但排在表格底部并带"已删除"徽章
+- **每日用量图表**——按天展示所选时间窗内的 token 用量，可切换柱状 /
+  折线 / 面积图，指标可选总 token / 输入+输出 / 请求数，悬停显示明细；
+  超过 180 天自动按周聚合
 
 ![扩展预览](docs/extension-preview.png)
 
@@ -112,6 +115,8 @@ extension/
 | `copilotTokens.autoRefresh` | `60` | 自动刷新间隔（秒），`0` 关闭 |
 | `copilotTokens.language` | `auto` | 界面语言：`auto` / `en` / `zh-CN` |
 | `copilotTokens.theme` | `default` | 面板配色：`default` / `green` / `purple` / `orange` / `red` |
+| `copilotTokens.chartType` | `bar` | 每日图表类型：`bar` / `line` / `area` |
+| `copilotTokens.chartMetric` | `total` | 每日图表指标：`total` / `stacked` / `requests` |
 
 ## Python CLI（零安装）
 

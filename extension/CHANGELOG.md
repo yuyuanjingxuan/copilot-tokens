@@ -2,6 +2,15 @@
 
 All notable changes to the Copilot Tokens extension are documented here.
 
+## 0.2.0
+
+- **Feature**: daily usage chart — a per-day chart of token usage over the
+  selected window, with a type switch (bar / line / area) and a metric
+  switch (total tokens, input + output stacked, request count); hover a
+  bar or point for the exact date, tokens, and request count. Windows
+  longer than 180 days aggregate by week. Choices persist via the new
+  `copilotTokens.chartType` and `copilotTokens.chartMetric` settings
+
 ## 0.1.6
 
 - **Fix**: sidebar (activity bar) view showed no data rows — the

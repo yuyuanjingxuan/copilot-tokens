@@ -157,6 +157,30 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
   .detail-table { width: auto; margin-top: 4px; }
   .detail-table th { position: static; background: transparent; }
   .detail-table td, .detail-table th { padding: 3px 14px 3px 0; }
+  .chart-wrap { margin-bottom: 18px; }
+  .chart-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+  .chart-head .chart-title { font-size: 12px; font-weight: 600; opacity: 0.8; margin-right: auto; }
+  .chart-box {
+    background: var(--ct-card-bg);
+    border: 1px solid var(--ct-border);
+    border-radius: 6px;
+    padding: 10px 12px 6px;
+    position: relative;
+  }
+  .chart-box svg { display: block; width: 100%; height: auto; }
+  .chart-tip {
+    position: absolute; pointer-events: none; z-index: 5;
+    background: var(--ct-card-bg);
+    border: 1px solid var(--ct-border);
+    border-radius: 4px; padding: 6px 10px;
+    font-size: 11px; line-height: 1.5; white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    opacity: 0; transition: opacity 0.1s;
+  }
+  .chart-tip.show { opacity: 1; }
+  .chart-tip .tip-date { font-weight: 600; margin-bottom: 2px; }
+  .chart-tip .dot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; vertical-align: 0; }
+  .chart-empty { text-align: center; padding: 24px 16px; opacity: 0.6; font-size: 12px; }
   .empty { text-align: center; padding: 48px 16px; opacity: 0.75; }
   .empty .hint { margin-top: 8px; font-size: 12px; max-width: 520px; margin-left: auto; margin-right: auto; line-height: 1.5; }
   .footer { margin-top: 20px; font-size: 11px; opacity: 0.5; text-align: right; }
@@ -195,6 +219,26 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
   </div>
 
   <div class="cards" id="cards"></div>
+
+  <div class="chart-wrap">
+    <div class="chart-head">
+      <span class="chart-title">${strings.chart}</span>
+      <label for="chartType">${strings.chartType}</label>
+      <select id="chartType">
+        <option value="bar">${strings.chartBar}</option>
+        <option value="line">${strings.chartLine}</option>
+        <option value="area">${strings.chartArea}</option>
+      </select>
+      <label for="chartMetric">${strings.chartMetric}</label>
+      <select id="chartMetric">
+        <option value="total">${strings.chartTotal}</option>
+        <option value="stacked">${strings.chartStacked}</option>
+        <option value="requests">${strings.chartRequests}</option>
+      </select>
+    </div>
+    <div class="chart-box" id="chartBox"></div>
+  </div>
+
   <div id="content"></div>
   <div class="footer" id="footer"></div>
   <div class="toast" id="toast"></div>
@@ -214,6 +258,8 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
 
   let report = null;
   let openSid = null;
+  let chartType = 'bar';
+  let chartMetric = 'total';
 
   function send(msg) { vscode.postMessage(msg); }
 
@@ -298,9 +344,195 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
       '<tbody>' + rows + '</tbody></table></td></tr>';
   }
 
+  // ── Daily usage chart ─────────────────────────────────────────────────────
+  const C_IN = '#3b82f6';   // input / requests
+  const C_OUT = '#f59e0b';  // output
+  const C_TOTAL = 'var(--ct-accent)';
+
+  function dayKey(ts) {
+    const d = new Date(ts);
+    const p = x => String(x).padStart(2, '0');
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+  }
+
+  function fmtShortDate(key) {
+    // 'YYYY-MM-DD' -> 'MM-DD' (year shown in tooltip)
+    return key.slice(5);
+  }
+
+  function fmtLongDate(key) {
+    const d = new Date(key + 'T00:00:00');
+    const p = x => String(x).padStart(2, '0');
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+  }
+
+  /** Aggregate all requests into per-day buckets. */
+  function buildDaily() {
+    const map = new Map();
+    for (const s of report.sessions) {
+      for (const r of (s.requests || [])) {
+        if (!r.ts) continue;
+        const k = dayKey(r.ts);
+        let b = map.get(k);
+        if (!b) { b = { key: k, input: 0, output: 0, requests: 0 }; map.set(k, b); }
+        b.input += r.inputTokens || 0;
+        b.output += r.outputTokens || 0;
+        b.requests += 1;
+      }
+    }
+    const days = [...map.values()].sort((a, b) => a.key < b.key ? -1 : 1);
+    // Fill gaps so the x-axis is continuous (missing days = zero).
+    if (days.length >= 2) {
+      const filled = [];
+      const start = new Date(days[0].key + 'T00:00:00');
+      const end = new Date(days[days.length - 1].key + 'T00:00:00');
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        const k = dayKey(d.getTime());
+        filled.push(map.get(k) || { key: k, input: 0, output: 0, requests: 0 });
+      }
+      return filled;
+    }
+    return days;
+  }
+
+  /** For very long windows (>180 days) aggregate into weeks. */
+  function maybeWeekly(daily) {
+    if (daily.length <= 180) return { buckets: daily, weekly: false };
+    const byWeek = new Map();
+    for (const b of daily) {
+      const d = new Date(b.key + 'T00:00:00');
+      const day = (d.getDay() + 6) % 7; // Monday = 0
+      const monday = new Date(d); monday.setDate(d.getDate() - day);
+      const k = dayKey(monday.getTime());
+      let w = byWeek.get(k);
+      if (!w) { w = { key: k, input: 0, output: 0, requests: 0 }; byWeek.set(k, w); }
+      w.input += b.input; w.output += b.output; w.requests += b.requests;
+    }
+    return { buckets: [...byWeek.values()].sort((a, b) => a.key < b.key ? -1 : 1), weekly: true };
+  }
+
+  function niceMax(v) {
+    if (v <= 0) return 1;
+    const mag = Math.pow(10, Math.floor(Math.log10(v)));
+    const n = v / mag;
+    const step = n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10;
+    return step * mag;
+  }
+
+  function fmtAxis(v) {
+    if (v >= 1e6) return (v / 1e6).toFixed(v % 1e6 === 0 ? 0 : 1) + 'M';
+    if (v >= 1e3) return (v / 1e3).toFixed(v % 1e3 === 0 ? 0 : 1) + 'k';
+    return String(Math.round(v));
+  }
+
+  function renderChart() {
+    const box = document.getElementById('chartBox');
+    if (!report || report.sessions.length === 0) {
+      box.innerHTML = '<div class="chart-empty">' + esc(S.noData) + '</div>';
+      return;
+    }
+    const { buckets, weekly } = maybeWeekly(buildDaily());
+    if (buckets.length === 0) {
+      box.innerHTML = '<div class="chart-empty">' + esc(S.noData) + '</div>';
+      return;
+    }
+
+    const W = 760, H = 200, padL = 46, padR = 10, padT = 12, padB = 26;
+    const plotW = W - padL - padR, plotH = H - padT - padB;
+    const n = buckets.length;
+    const slot = plotW / n;
+    const barW = Math.max(2, Math.min(slot * 0.7, 40));
+
+    // Per-bucket values by metric.
+    const vals = buckets.map(b => {
+      if (chartMetric === 'requests') return { total: b.requests, input: b.requests, output: 0 };
+      return { total: b.input + b.output, input: b.input, output: b.output };
+    });
+    const maxV = niceMax(Math.max(...vals.map(v => v.total)));
+    const y = v => padT + plotH - (v / maxV) * plotH;
+    const x = i => padL + slot * i + slot / 2;
+
+    let svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">';
+
+    // Gridlines + y-axis labels (4 divisions).
+    for (let g = 0; g <= 4; g++) {
+      const gv = (maxV / 4) * g;
+      const gy = y(gv);
+      svg += '<line x1="' + padL + '" y1="' + gy + '" x2="' + (W - padR) + '" y2="' + gy + '" stroke="var(--ct-border)" stroke-width="1" opacity="0.5"/>';
+      svg += '<text x="' + (padL - 6) + '" y="' + (gy + 3) + '" text-anchor="end" font-size="9" fill="var(--ct-fg)" opacity="0.6">' + fmtAxis(gv) + '</text>';
+    }
+
+    // X-axis labels: show at most ~8.
+    const labelEvery = Math.max(1, Math.ceil(n / 8));
+    for (let i = 0; i < n; i++) {
+      if (i % labelEvery !== 0 && i !== n - 1) continue;
+      svg += '<text x="' + x(i) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="9" fill="var(--ct-fg)" opacity="0.6">' + fmtShortDate(buckets[i].key) + '</text>';
+    }
+
+    // Series.
+    if (chartType === 'bar') {
+      for (let i = 0; i < n; i++) {
+        const v = vals[i];
+        const bx = x(i) - barW / 2;
+        if (chartMetric === 'stacked') {
+          const hIn = (v.input / maxV) * plotH;
+          const hOut = (v.output / maxV) * plotH;
+          svg += '<rect x="' + bx + '" y="' + y(v.input) + '" width="' + barW + '" height="' + hIn + '" fill="' + C_IN + '" rx="1"/>';
+          svg += '<rect x="' + bx + '" y="' + y(v.total) + '" width="' + barW + '" height="' + hOut + '" fill="' + C_OUT + '" rx="1"/>';
+        } else {
+          svg += '<rect x="' + bx + '" y="' + y(v.total) + '" width="' + barW + '" height="' + ((v.total / maxV) * plotH) + '" fill="' + (chartMetric === 'requests' ? C_IN : C_TOTAL) + '" rx="1"/>';
+        }
+      }
+    } else {
+      // line / area
+      const pts = vals.map((v, i) => x(i) + ',' + y(v.total)).join(' ');
+      if (chartType === 'area') {
+        svg += '<polygon points="' + padL + ',' + y(0) + ' ' + pts + ' ' + (W - padR) + ',' + y(0) + '" fill="' + C_TOTAL + '" opacity="0.25"/>';
+      }
+      svg += '<polyline points="' + pts + '" fill="none" stroke="' + C_TOTAL + '" stroke-width="2"/>';
+      for (let i = 0; i < n; i++) {
+        svg += '<circle cx="' + x(i) + '" cy="' + y(vals[i].total) + '" r="2.5" fill="' + C_TOTAL + '"/>';
+      }
+    }
+
+    // Hover hit-areas (one per bucket).
+    for (let i = 0; i < n; i++) {
+      svg += '<rect class="chart-hit" data-i="' + i + '" x="' + (padL + slot * i) + '" y="' + padT + '" width="' + slot + '" height="' + plotH + '" fill="transparent"/>';
+    }
+    svg += '</svg>';
+    box.innerHTML = svg + '<div class="chart-tip" id="chartTip"></div>';
+
+    const tip = document.getElementById('chartTip');
+    box.querySelectorAll('.chart-hit').forEach(hit => {
+      hit.addEventListener('mousemove', ev => {
+        const i = parseInt(hit.dataset.i, 10);
+        const b = buckets[i], v = vals[i];
+        let rows = '';
+        if (chartMetric === 'stacked') {
+          rows = '<div><span class="dot" style="background:' + C_IN + '"></span>' + esc(S.input) + ': ' + fmt(v.input) + '</div>' +
+                 '<div><span class="dot" style="background:' + C_OUT + '"></span>' + esc(S.output) + ': ' + fmt(v.output) + '</div>';
+        } else if (chartMetric === 'requests') {
+          rows = '<div>' + esc(S.requests) + ': ' + fmt(v.total) + '</div>';
+        } else {
+          rows = '<div>' + esc(S.total) + ': ' + fmt(v.total) + '</div>';
+        }
+        tip.innerHTML = '<div class="tip-date">' + fmtLongDate(b.key) + (weekly ? ' (week)' : '') + '</div>' + rows;
+        const boxRect = box.getBoundingClientRect();
+        let tx = ev.clientX - boxRect.left + 12;
+        let ty = ev.clientY - boxRect.top - 10;
+        if (tx + tip.offsetWidth > boxRect.width - 4) tx = ev.clientX - boxRect.left - tip.offsetWidth - 12;
+        tip.style.left = tx + 'px';
+        tip.style.top = ty + 'px';
+        tip.classList.add('show');
+      });
+      hit.addEventListener('mouseleave', () => tip.classList.remove('show'));
+    });
+  }
+
   function render() {
     if (!report) return;
     renderCards(report.totals);
+    renderChart();
     renderTable();
     document.getElementById('footer').textContent =
       S.version + ' · ' + new Date(report.generatedAt).toLocaleString();
@@ -311,8 +543,12 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
     if (msg.type === 'report') {
       report = msg.report;
       openSid = null;
+      chartType = msg.report.chartType || 'bar';
+      chartMetric = msg.report.chartMetric || 'total';
       document.getElementById('days').value = String(msg.report.days ?? 'all');
       document.getElementById('theme').value = msg.report.theme || 'default';
+      document.getElementById('chartType').value = chartType;
+      document.getElementById('chartMetric').value = chartMetric;
       document.body.dataset.theme = msg.report.theme || 'default';
       render();
     } else if (msg.type === 'toast') {
@@ -328,6 +564,19 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
     const v = e.target.value;
     document.body.dataset.theme = v;
     send({ type: 'setTheme', theme: v });
+  });
+  function sendChart() {
+    send({ type: 'setChart', chartType: chartType, chartMetric: chartMetric });
+  }
+  document.getElementById('chartType').addEventListener('change', e => {
+    chartType = e.target.value;
+    sendChart();
+    renderChart(); // re-render locally for an instant switch
+  });
+  document.getElementById('chartMetric').addEventListener('change', e => {
+    chartMetric = e.target.value;
+    sendChart();
+    renderChart(); // re-render locally for an instant switch
   });
   document.getElementById('refresh').addEventListener('click', () => send({ type: 'refresh' }));
   document.getElementById('export').addEventListener('click', () => send({ type: 'export' }));

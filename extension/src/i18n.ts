@@ -29,6 +29,15 @@ export interface Strings {
   refreshed: string;
   deleted: string;
   deletedGroup: string;
+  chart: string;
+  chartType: string;
+  chartMetric: string;
+  chartBar: string;
+  chartLine: string;
+  chartArea: string;
+  chartTotal: string;
+  chartStacked: string;
+  chartRequests: string;
 }
 
 const en: Strings = {
@@ -60,6 +69,15 @@ const en: Strings = {
   refreshed: 'Updated',
   deleted: 'Deleted',
   deletedGroup: 'Deleted sessions',
+  chart: 'Daily usage',
+  chartType: 'Chart',
+  chartMetric: 'Metric',
+  chartBar: 'Bar',
+  chartLine: 'Line',
+  chartArea: 'Area',
+  chartTotal: 'Total tokens',
+  chartStacked: 'Input + Output',
+  chartRequests: 'Requests',
 };
 
 const zh: Strings = {
@@ -91,6 +109,15 @@ const zh: Strings = {
   refreshed: '已更新',
   deleted: '已删除',
   deletedGroup: '已删除的会话',
+  chart: '每日用量',
+  chartType: '图表',
+  chartMetric: '指标',
+  chartBar: '柱状',
+  chartLine: '折线',
+  chartArea: '面积',
+  chartTotal: '总 token',
+  chartStacked: '输入 + 输出',
+  chartRequests: '请求数',
 };
 
 export function getStrings(lang: Lang): Strings {

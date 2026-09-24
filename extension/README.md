@@ -55,6 +55,10 @@ Enable debug log file writing in VS Code settings
 - **Auto-refresh** — re-scans the logs every 60 s by default
   (`copilotTokens.autoRefresh`, set `0` to disable)
 - **Day window** — 7 / 30 / 90 days or all sessions
+- **Daily usage chart** — per-day bar / line / area chart of token usage
+  over the selected window; switch the metric (total tokens, input +
+  output stacked, request count) and hover for details; windows longer
+  than 180 days aggregate by week
 - **JSON export** — save the current report as a UTF-8 JSON file
 - **Theming** — follows your light/dark theme; 5 accent color themes
   (default / green / purple / orange / red), persisted in settings
@@ -83,6 +87,8 @@ on the right shows the total token count and opens the panel on click.
 | `copilotTokens.autoRefresh` | `60` | Auto-refresh interval in seconds; `0` disables |
 | `copilotTokens.language` | `auto` | UI language: `auto` / `en` / `zh-CN` |
 | `copilotTokens.theme` | `default` | Panel color theme: `default` / `green` / `purple` / `orange` / `red` |
+| `copilotTokens.chartType` | `bar` | Daily chart type: `bar` / `line` / `area` |
+| `copilotTokens.chartMetric` | `total` | Daily chart metric: `total` / `stacked` / `requests` |
 
 ## Data sources
 
