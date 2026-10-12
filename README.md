@@ -124,9 +124,17 @@ Want the very latest version before it hits the Marketplace?
 
 | Command | Action |
 |---|---|
-| `Copilot Tokens: Show Usage` | Open the usage panel |
-| `Copilot Tokens: Refresh` | Re-scan the logs |
+| `Copilot Tokens: Show Usage` | Open the usage panel (full-width tab). This **only opens the panel to view data** — it does **not** change the enabled/disabled state. It works even while the extension is disabled (see below). |
+| `Copilot Tokens: Refresh` | Re-scan the logs and update the panel |
 | `Copilot Tokens: Export JSON` | Save the current report as a JSON file |
+| `Copilot Tokens: Disable` | Stop all background activity: the auto-refresh timer, the status bar item, and the panel. The extension stays loaded but does no background work. |
+| `Copilot Tokens: Enable` | Restore everything that `Disable` stopped (auto-refresh, status bar, panel). |
+
+**How the commands relate — read this to avoid confusion:**
+
+- **`Show Usage` vs `Enable`.** `Show Usage` only *opens the panel to look at data*; it does **not** turn the extension back on. `Enable` is the only command that *restores background work* (auto-refresh + status bar). If the extension is disabled and you run `Show Usage`, the panel opens so you can view data, but the status bar stays hidden and auto-refresh stays off until you run `Enable`.
+- **`Disable` vs fully unloading.** `Disable` only stops the extension's *background work*; the extension itself stays loaded in the extension host. To fully unload it (free its memory), disable it from the **Extensions view** instead.
+- **While disabled.** The sidebar view (activity bar icon) and `Show Usage` still open so you can view data, but nothing auto-refreshes and the status bar is hidden until you run `Enable`.
 
 ### Settings
 

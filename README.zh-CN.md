@@ -104,14 +104,17 @@ extension/
 
 | 命令 | 作用 |
 |---|---|
-| `Copilot Tokens: Show Usage` | 打开用量面板 |
-| `Copilot Tokens: Refresh` | 重新扫描日志 |
+| `Copilot Tokens: Show Usage` | 打开用量面板（全宽标签页）。**只负责打开面板查看数据**，**不会**改变启用 / 禁用状态；即使在禁用状态下也能打开（见下方说明）。 |
+| `Copilot Tokens: Refresh` | 重新扫描日志并更新面板 |
 | `Copilot Tokens: Export JSON` | 将当前报告保存为 JSON 文件 |
-| `Copilot Tokens: Disable` | 停止所有后台活动（自动刷新、状态栏、面板） |
-| `Copilot Tokens: Enable` | 重新启用（恢复 Disable 停止的活动） |
+| `Copilot Tokens: Disable` | 停止所有后台活动：自动刷新定时器、状态栏、面板。扩展仍保持加载，但不做任何后台工作。 |
+| `Copilot Tokens: Enable` | 恢复 `Disable` 停止的一切（自动刷新、状态栏、面板）。 |
 
-> 要彻底卸载扩展（释放 extension host 中的内存），请在扩展视图中禁用它；
-> `Disable` 命令只是停止其后台工作。
+**命令之间的关系——请仔细阅读以避免混淆：**
+
+- **`Show Usage` 与 `Enable` 的区别。** `Show Usage` 只是*打开面板查看数据*，**不会**重新启用扩展；只有 `Enable` 才会*恢复后台工作*（自动刷新 + 状态栏）。如果扩展处于禁用状态，运行 `Show Usage` 可以打开面板查看数据，但状态栏仍隐藏、自动刷新仍关闭，直到你运行 `Enable` 才会恢复。
+- **`Disable` 与彻底卸载的区别。** `Disable` 只停止扩展的*后台工作*，扩展本身仍在 extension host 中保持加载。要彻底卸载（释放内存），请在**扩展视图**中禁用。
+- **禁用状态下的行为。** 侧边栏视图（活动栏图标）和 `Show Usage` 仍可打开以便查看数据，但不会自动刷新、状态栏也隐藏，直到你运行 `Enable` 才会恢复。
 
 > **时间窗口如何统计。** 窗口（7 / 14 / 30 / 60 / 90 天，或「全部」）是按**请求的时间戳**统计的，
 > 而不是按会话最后活跃时间。只有时间戳落在窗口内的请求才会被计入和绘制——一个

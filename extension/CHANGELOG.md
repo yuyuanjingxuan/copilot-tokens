@@ -29,7 +29,10 @@ All notable changes to the Copilot Tokens extension are documented here.
   outside the selected range.
 - **Fix**: switching the log-scale toggle no longer resets the selected
   time window — changing chart settings no longer clobbers the current
-  window, and the window choice is now persisted to the configuration.
+  window.
+- **Fix**: the selected day window (7 / 14 / 30 days / All) is now
+  persisted to the configuration, so the choice survives a restart instead
+  of resetting to the default.
 - **Fix**: `Copilot Tokens: Show Usage` now opens the panel even while the
   extension is disabled (matching the sidebar view), instead of erroring.
   Disabling still stops background work (auto-refresh, status bar).
