@@ -5,7 +5,7 @@
 > [English README](README.md)
 
 [![CI](https://github.com/yuyuanjingxuan/copilot-tokens/actions/workflows/ci.yml/badge.svg)](https://github.com/yuyuanjingxuan/copilot-tokens/actions/workflows/ci.yml)
-[![Coverage](https://coveralls.io/repos/github/yuyuanjingxuan/copilot-tokens/badge.svg)](https://coveralls.io/github/yuyuanjingxuan/copilot-tokens)
+[![Coverage](https://coveralls.io/repos/github/yuyuanjingxuan/copilot-tokens/badge.svg?branch=main)](https://coveralls.io/github/yuyuanjingxuan/copilot-tokens?branch=main)
 [![VS Code Marketplace](https://img.shields.io/badge/VS_Code_Marketplace-listed-blue)](https://marketplace.visualstudio.com/items?itemName=yuyuanjingxuan.copilot-tokens)
 [![VS Code](https://img.shields.io/badge/VS_Code-%E2%89%A51.85-blue.svg)](https://code.visualstudio.com/)
 [![Python](https://img.shields.io/badge/Python-3.9--3.13-blue.svg)](https://www.python.org/)
@@ -39,22 +39,22 @@ VS Code Copilot Chat 的 token 用量统计工具（Windows / macOS / Linux）�
 
 ## VS Code 扩展
 
-一个原生 VS Code 扩展，把解析逻辑包装成跟随主题的 Webview 面板——
+一个原生 VS Code 扩展，把解析逻辑包装成跟随主题的 Webview 面板，包含
 汇总卡片、按会话的表格、可展开的每请求明细。自动适配浅色 / 深色主题，
 界面支持英文 / 中文（自动检测），并提供 5 种整页配色
 （default / green / purple / orange / red，选择会持久化到设置）。
 
-- **活动栏图标**——点击左侧活动栏图标即可在侧边栏打开面板；
-  `Copilot Tokens: Show Usage` 命令打开全宽标签页
-- **状态栏**——状态栏右侧显示当前窗口的总 token 数，点击打开面板
-- **自动刷新**——默认每 60 秒重新扫描日志（`copilotTokens.autoRefresh`，
-  设为 `0` 关闭）
-- **已删除会话**——从 VS Code 聊天列表删除的会话仍计入统计（token 已消耗），
-  但排在表格底部并带"已删除"徽章
-- **每日用量图表**——按天展示所选时间窗内的 token 用量，可切换柱状 /
+- **活动栏图标**。点击左侧活动栏图标即可在侧边栏打开面板；
+  `Copilot Tokens: Show Usage` 命令打开全宽标签页。
+- **状态栏**。状态栏右侧显示当前窗口的总 token 数，点击打开面板。
+- **自动刷新**。默认每 60 秒重新扫描日志（`copilotTokens.autoRefresh`，
+  设为 `0` 关闭）。
+- **已删除会话**。从 VS Code 聊天列表删除的会话仍计入统计（token 已消耗），
+  但排在表格底部并带"已删除"徽章。
+- **每日用量图表**。按天展示所选时间窗内的 token 用量，可切换柱状 /
   折线 / 面积图，指标可选总 token / 输入+输出 / 请求数，悬停显示明细；
-  “输入+输出”在折线/面积模式下画两条线；可选对数刻度 y 轴；
-  超过 180 天自动按周聚合
+  "输入+输出"在折线/面积模式下画两条线；可选对数刻度 y 轴；
+  超过 180 天自动按周聚合。
 
 ![每日用量图表](docs/chart-preview.png)
 
@@ -99,7 +99,7 @@ extension/
 
 1. 克隆本仓库，用 VS Code 打开 `extension/` 文件夹
 2. 运行 `npm install`
-3. 按 <kbd>F5</kbd>（Run Extension）——会打开一个加载了开发版构建的第二个 VS Code 窗口
+3. 按 <kbd>F5</kbd>（Run Extension），会打开一个加载了开发版构建的第二个 VS Code 窗口
 4. 在该窗口中运行命令 **Copilot Tokens: Show Usage**
 
 ### 命令
@@ -112,14 +112,14 @@ extension/
 | `Copilot Tokens: Disable` | 停止所有后台活动：自动刷新定时器、状态栏、面板。扩展仍保持加载，但不做任何后台工作。 |
 | `Copilot Tokens: Enable` | 恢复 `Disable` 停止的一切（自动刷新、状态栏、面板）。 |
 
-**命令之间的关系——请仔细阅读以避免混淆：**
+**命令之间的关系。请仔细阅读以避免混淆：**
 
 - **`Show Usage` 与 `Enable` 的区别。** `Show Usage` 只是*打开面板查看数据*，**不会**重新启用扩展；只有 `Enable` 才会*恢复后台工作*（自动刷新 + 状态栏）。如果扩展处于禁用状态，运行 `Show Usage` 可以打开面板查看数据，但状态栏仍隐藏、自动刷新仍关闭，直到你运行 `Enable` 才会恢复。
 - **`Disable` 与彻底卸载的区别。** `Disable` 只停止扩展的*后台工作*，扩展本身仍在 extension host 中保持加载。要彻底卸载（释放内存），请在**扩展视图**中禁用。
 - **禁用状态下的行为。** 侧边栏视图（活动栏图标）和 `Show Usage` 仍可打开以便查看数据，但不会自动刷新、状态栏也隐藏，直到你运行 `Enable` 才会恢复。
 
 > **时间窗口如何统计。** 窗口（7 / 14 / 30 / 60 / 90 天，或「全部」）是按**请求的时间戳**统计的，
-> 而不是按会话最后活跃时间。只有时间戳落在窗口内的请求才会被计入和绘制——一个
+> 而不是按会话最后活跃时间。只有时间戳落在窗口内的请求才会被计入和绘制。一个
 > 几周前开始、但今天有请求的会话，只会计入今天的请求；图表也绝不会显示所选范围
 > 之外的数据。窗口内没有任何请求的会话会被省略。（出于性能考虑，最后写入时间早于
 > 窗口的日志文件会被整体跳过；请求只可能存在于同一时间段写入的文件中，因此这不
@@ -140,7 +140,7 @@ extension/
 ## Python CLI（零安装）
 
 更喜欢终端？一个单文件、纯标准库的 Python 脚本（零依赖，Python 3.9+）
-完成同样的工作——同样会把已从 VS Code 聊天列表删除的会话排在底部并带
+完成同样的工作。它同样会把已从 VS Code 聊天列表删除的会话排在底部并带
 `[Deleted]` 标记（合计仍计入）。
 
 ### 安装
@@ -216,19 +216,19 @@ a8ba8abd 09-18 18:34      1     9,360      157        0     9,517  qwen3.8-27b  
 
 ### 已知限制
 
-- **缓存 token 未记录**：VS Code 目前不在日志中写入 cache read/write token
+- **缓存 token 未记录**。VS Code 目前不在日志中写入 cache read/write token
   （见 [microsoft/vscode#329657](https://github.com/microsoft/vscode/issues/329657)）。
-  解析器已预留 `cachedTokens` 字段，未来格式支持后会自动生效
+  解析器已预留 `cachedTokens` 字段，未来格式支持后会自动生效。
 - 输入 token 为**每次请求的完整上下文**（含系统提示、历史消息、工具结果），
-  因此多轮会话的"输入"总量会远大于实际新增内容——这是上下文累积的正常现象
+  因此多轮会话的"输入"总量会远大于实际新增内容。这是上下文累积的正常现象。
 - 日志格式为 VS Code 内部实现，未公开承诺稳定。若升级 VS Code 后数据缺失，
-  请提 issue 并附上 `main.jsonl` 中一条 `llm_request` 事件（**脱敏后**）
+  请提 issue 并附上 `main.jsonl` 中一条 `llm_request` 事件（**脱敏后**）。
 
 ## 隐私
 
-- 工具**只读**本地日志文件，不联网、不上传任何数据
-- 会话标题取自你的第一条用户消息，导出 JSON 前请自行检查是否含敏感内容
-- 请勿将 `main.jsonl` 原始日志提交到任何仓库
+- 工具**只读**本地日志文件，不联网、不上传任何数据。
+- 会话标题取自你的第一条用户消息，导出 JSON 前请自行检查是否含敏感内容。
+- 请勿将 `main.jsonl` 原始日志提交到任何仓库。
 
 ## License
 

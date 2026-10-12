@@ -5,7 +5,7 @@
 > [Chinese (Simplified) README](README.zh-CN.md)
 
 [![CI](https://github.com/yuyuanjingxuan/copilot-tokens/actions/workflows/ci.yml/badge.svg)](https://github.com/yuyuanjingxuan/copilot-tokens/actions/workflows/ci.yml)
-[![Coverage](https://coveralls.io/repos/github/yuyuanjingxuan/copilot-tokens/badge.svg)](https://coveralls.io/github/yuyuanjingxuan/copilot-tokens)
+[![Coverage](https://coveralls.io/repos/github/yuyuanjingxuan/copilot-tokens/badge.svg?branch=main)](https://coveralls.io/github/yuyuanjingxuan/copilot-tokens?branch=main)
 [![VS Code Marketplace](https://img.shields.io/badge/VS_Code_Marketplace-listed-blue)](https://marketplace.visualstudio.com/items?itemName=yuyuanjingxuan.copilot-tokens)
 [![VS Code](https://img.shields.io/badge/VS_Code-%E2%89%A51.85-blue.svg)](https://code.visualstudio.com/)
 [![Python](https://img.shields.io/badge/Python-3.9--3.13-blue.svg)](https://www.python.org/)
@@ -14,21 +14,21 @@
 
 Token usage tracker for VS Code Copilot Chat (Windows / macOS / Linux).
 
-Parses the built-in Copilot Chat debug logs (`main.jsonl`) and aggregates
+It parses the built-in Copilot Chat debug logs (`main.jsonl`) and totals up
 input / output tokens, model, and latency per LLM request and per session.
-Available as a **native VS Code extension** (themed webview panel) and a
-**zero-install Python CLI** — both share identical parsing.
+You get two ways to use it: a **native VS Code extension** (a themed webview
+panel) and a **zero-install Python CLI**. Both share the same parsing logic.
 
 ## Why this exists
 
 - Since VS Code 1.13x, empty-window chat sessions write their debug logs to
-  `globalStorage/github.copilot-chat/debug-logs/`, while several third-party
-  tracker extensions only scan the older `workspaceStorage` path — so they
-  show "no sessions found"
-- BYOK (bring-your-own-key) users don't see usage on the GitHub billing page;
-  local log analysis is the only option
-- This tool parses `llm_request` events directly from the logs and relies on
-  no VS Code internal APIs
+  `globalStorage/github.copilot-chat/debug-logs/`. Several third-party
+  tracker extensions only scan the older `workspaceStorage` path, so they
+  end up showing "no sessions found".
+- BYOK (bring-your-own-key) users don't see usage on the GitHub billing
+  page, so reading the local logs is the only option.
+- This tool reads `llm_request` events straight from the logs and does not
+  rely on any VS Code internal API.
 
 ## Prerequisites
 
@@ -38,43 +38,43 @@ Enable debug log file writing in VS Code settings:
 "github.copilot.chat.agentDebugLog.fileLogging.enabled": true
 ```
 
-> With this setting on, full request logs for every session are written to
-> local disk. Turn it off if you don't want logs persisted (this tool will
-> then have no data to read).
+> With this on, the full request logs for every session are written to local
+> disk. Turn it off if you don't want logs persisted (the tool will then
+> have nothing to read).
 
 ## VS Code extension
 
-A native VS Code extension wraps the parser in a themed webview panel —
+A native VS Code extension wraps the parser in a themed webview panel with
 summary cards, a per-session table, and expandable per-request detail. It
-follows your light/dark theme, supports English / Chinese (auto-detected),
+follows your light/dark theme, supports English and Chinese (auto-detected),
 and offers five full-page color themes (default / green / purple / orange /
 red, persisted in settings).
 
-- **Activity bar icon** — click the icon on the left to open the dashboard
-  in the sidebar; `Copilot Tokens: Show Usage` opens the full-width tab
-- **Status bar** — total tokens for the selected window on the right side
-  of the status bar; click to open the panel
-- **Auto-refresh** — re-scans the logs every 60 s by default
-  (`copilotTokens.autoRefresh`, `0` disables)
-- **Disable / Enable** — `Copilot Tokens: Disable` stops all background
-  activity (auto-refresh, status bar, panel); `Enable` restores it
-- **Deleted sessions** — sessions removed from the VS Code chat list are
-  still counted (the tokens were consumed) but grouped at the bottom of the
-  table with a "Deleted" badge
-- **Daily usage chart** — per-day bar / line / area chart of token usage
+- **Activity bar icon.** Click the icon on the left to open the dashboard
+  in the sidebar. `Copilot Tokens: Show Usage` opens the full-width tab.
+- **Status bar.** Shows the total tokens for the selected window on the
+  right side of the status bar. Click it to open the panel.
+- **Auto-refresh.** Re-scans the logs every 60 s by default
+  (`copilotTokens.autoRefresh`, `0` disables it).
+- **Disable / Enable.** `Copilot Tokens: Disable` stops all background
+  activity (auto-refresh, status bar, panel). `Enable` restores it.
+- **Deleted sessions.** Sessions removed from the VS Code chat list are
+  still counted (the tokens were consumed), but they are grouped at the
+  bottom of the table with a "Deleted" badge.
+- **Daily usage chart.** A per-day bar / line / area chart of token usage
   over the selected window, with a metric switch (total tokens, input +
-  output, requests), hover tooltips, and an optional log-scale y-axis
+  output, requests), hover tooltips, and an optional log-scale y-axis.
 
 ![Daily usage chart](docs/chart-preview.png)
 
 > **How the selected window is counted.** The window (7 / 14 / 30 / 60 /
 > 90 days, or "All") is applied to **request timestamps**, not to when a
 > session was last active. Only requests whose timestamp falls inside the
-> window are counted and drawn — a session that started weeks ago but had a
+> window are counted and drawn. A session that started weeks ago but had a
 > request today contributes only today's request, and the chart never shows
 > data outside the selected range. Sessions with no in-window requests are
 > omitted. (For performance, log files whose last write predates the window
-> are skipped entirely; a request can only exist in a file that was written
+> are skipped entirely. A request can only exist in a file that was written
 > around the same time, so this does not change the result.)
 
 ![Extension preview](docs/extension-preview.png)
@@ -94,12 +94,11 @@ extension/
 
 ### Install (Marketplace)
 
-1. Open the Extensions view (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>X</kbd>)
-2. Search for **Copilot Tokens** and click **Install**
-   (or go straight to the
-   [marketplace listing](https://marketplace.visualstudio.com/items?itemName=yuyuanjingxuan.copilot-tokens))
+1. Open the Extensions view (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>X</kbd>).
+2. Search for **Copilot Tokens** and click **Install** (or go straight to
+   the [marketplace listing](https://marketplace.visualstudio.com/items?itemName=yuyuanjingxuan.copilot-tokens)).
 3. Click the **Copilot Tokens** icon on the activity bar (or run the
-   command **Copilot Tokens: Show Usage**)
+   command **Copilot Tokens: Show Usage**).
 
 Updates are delivered automatically through the Marketplace.
 
@@ -108,31 +107,31 @@ Updates are delivered automatically through the Marketplace.
 Prefer to install a specific version by hand?
 
 1. Download `copilot-tokens-x.y.z.vsix` from the
-   [latest release](https://github.com/yuyuanjingxuan/copilot-tokens/releases)
-2. <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> → **Extensions: Install from VSIX…** → pick the file
-3. Run the command **Copilot Tokens: Show Usage**
+   [latest release](https://github.com/yuyuanjingxuan/copilot-tokens/releases).
+2. <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>P</kbd> → **Extensions: Install from VSIX…** → pick the file.
+3. Run the command **Copilot Tokens: Show Usage**.
 
 ### Develop from source (F5)
 
 Want the very latest version before it hits the Marketplace?
 
-1. Clone this repo and open the `extension/` folder in VS Code
-2. Run `npm install`
-3. Press <kbd>F5</kbd> (Run Extension) — a second VS Code window opens with
-   the dev build
-4. In that window, run the command **Copilot Tokens: Show Usage**
+1. Clone this repo and open the `extension/` folder in VS Code.
+2. Run `npm install`.
+3. Press <kbd>F5</kbd> (Run Extension). A second VS Code window opens with
+   the dev build.
+4. In that window, run the command **Copilot Tokens: Show Usage**.
 
 ### Commands
 
 | Command | Action |
 |---|---|
-| `Copilot Tokens: Show Usage` | Open the usage panel (full-width tab). This **only opens the panel to view data** — it does **not** change the enabled/disabled state. It works even while the extension is disabled (see below). |
+| `Copilot Tokens: Show Usage` | Open the usage panel (full-width tab). This **only opens the panel to view data**; it does **not** change the enabled/disabled state. It works even while the extension is disabled (see below). |
 | `Copilot Tokens: Refresh` | Re-scan the logs and update the panel |
 | `Copilot Tokens: Export JSON` | Save the current report as a JSON file |
 | `Copilot Tokens: Disable` | Stop all background activity: the auto-refresh timer, the status bar item, and the panel. The extension stays loaded but does no background work. |
 | `Copilot Tokens: Enable` | Restore everything that `Disable` stopped (auto-refresh, status bar, panel). |
 
-**How the commands relate — read this to avoid confusion:**
+**How the commands relate. Read this to avoid confusion:**
 
 - **`Show Usage` vs `Enable`.** `Show Usage` only *opens the panel to look at data*; it does **not** turn the extension back on. `Enable` is the only command that *restores background work* (auto-refresh + status bar). If the extension is disabled and you run `Show Usage`, the panel opens so you can view data, but the status bar stays hidden and auto-refresh stays off until you run `Enable`.
 - **`Disable` vs fully unloading.** `Disable` only stops the extension's *background work*; the extension itself stays loaded in the extension host. To fully unload it (free its memory), disable it from the **Extensions view** instead.
@@ -153,13 +152,13 @@ Want the very latest version before it hits the Marketplace?
 ## Python CLI (zero-install)
 
 Prefer the terminal? A single-file, pure-stdlib Python script (no
-dependencies, Python 3.9+) does the same job — including grouping
-sessions removed from the VS Code chat list at the bottom with a
-`[Deleted]` marker (totals still include them).
+dependencies, Python 3.9+) does the same job. It also groups sessions
+removed from the VS Code chat list at the bottom with a `[Deleted]` marker
+(totals still include them).
 
 ### Install
 
-Nothing to install — just run it:
+Nothing to install. Just run it:
 
 ```bash
 # Windows: double-click cli/copilot_tokens.bat, or run in a terminal
@@ -231,25 +230,25 @@ Event types parsed (`main.jsonl` is JSONL, one event per line):
 
 ### Known limitations
 
-- **Cached tokens are not recorded**: VS Code currently does not write cache
+- **Cached tokens are not recorded.** VS Code currently does not write cache
   read/write tokens to the log (see
   [microsoft/vscode#329657](https://github.com/microsoft/vscode/issues/329657)).
   The parser reserves a `cachedTokens` field; it will light up automatically
-  once the format supports it
+  once the format supports it.
 - Input tokens are the **full context of each request** (system prompt,
-  history, tool results), so multi-turn sessions show a large "input" total —
-  this is normal context accumulation, not double counting
+  history, tool results), so multi-turn sessions show a large "input" total.
+  This is normal context accumulation, not double counting.
 - The log format is an internal VS Code implementation with no stability
   guarantee. If data goes missing after a VS Code upgrade, please open an
-  issue with one `llm_request` event from your `main.jsonl` (**redacted**)
+  issue with one `llm_request` event from your `main.jsonl` (**redacted**).
 
 ## Privacy
 
 - The tool is **read-only** over local log files. It never phones home or
-  uploads anything
-- Session titles come from your first user message — review exported JSON
-  for sensitive content before sharing
-- Never commit raw `main.jsonl` logs to any repository
+  uploads anything.
+- Session titles come from your first user message. Review exported JSON
+  for sensitive content before sharing.
+- Never commit raw `main.jsonl` logs to any repository.
 
 ## License
 
