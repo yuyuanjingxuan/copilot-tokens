@@ -27,6 +27,12 @@ All notable changes to the Copilot Tokens extension are documented here.
   request timestamps, not session activity — only requests inside the
   window are counted and drawn, so the chart and totals never include data
   outside the selected range.
+- **Fix**: switching the log-scale toggle no longer resets the selected
+  time window — changing chart settings no longer clobbers the current
+  window, and the window choice is now persisted to the configuration.
+- **Fix**: `Copilot Tokens: Show Usage` now opens the panel even while the
+  extension is disabled (matching the sidebar view), instead of erroring.
+  Disabling still stops background work (auto-refresh, status bar).
 
 ## 0.2.0
 

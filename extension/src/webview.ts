@@ -389,6 +389,7 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
   // ── Daily usage chart ─────────────────────────────────────────────────────
   const C_IN = '#3b82f6';   // input / requests
   const C_OUT = '#f59e0b';  // output
+  const C_CACHED = '#10b981'; // cached (prompt cache hits)
   const C_TOTAL = 'var(--ct-accent)';
 
   function dayKey(ts) {
@@ -416,9 +417,10 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
         if (!r.ts) continue;
         const k = dayKey(r.ts);
         let b = map.get(k);
-        if (!b) { b = { key: k, input: 0, output: 0, requests: 0 }; map.set(k, b); }
+        if (!b) { b = { key: k, input: 0, output: 0, cached: 0, requests: 0 }; map.set(k, b); }
         b.input += r.inputTokens || 0;
         b.output += r.outputTokens || 0;
+        b.cached += r.cachedTokens || 0;
         b.requests += 1;
       }
     }
@@ -430,7 +432,7 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
       const end = new Date(days[days.length - 1].key + 'T00:00:00');
       for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
         const k = dayKey(d.getTime());
-        filled.push(map.get(k) || { key: k, input: 0, output: 0, requests: 0 });
+        filled.push(map.get(k) || { key: k, input: 0, output: 0, cached: 0, requests: 0 });
       }
       return filled;
     }
@@ -447,8 +449,8 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
       const monday = new Date(d); monday.setDate(d.getDate() - day);
       const k = dayKey(monday.getTime());
       let w = byWeek.get(k);
-      if (!w) { w = { key: k, input: 0, output: 0, requests: 0 }; byWeek.set(k, w); }
-      w.input += b.input; w.output += b.output; w.requests += b.requests;
+      if (!w) { w = { key: k, input: 0, output: 0, cached: 0, requests: 0 }; byWeek.set(k, w); }
+      w.input += b.input; w.output += b.output; w.cached += b.cached; w.requests += b.requests;
     }
     return { buckets: [...byWeek.values()].sort((a, b) => a.key < b.key ? -1 : 1), weekly: true };
   }
@@ -487,8 +489,8 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
 
     // Per-bucket values by metric.
     const vals = buckets.map(b => {
-      if (chartMetric === 'requests') return { total: b.requests, input: b.requests, output: 0 };
-      return { total: b.input + b.output, input: b.input, output: b.output };
+      if (chartMetric === 'requests') return { total: b.requests, input: b.requests, output: 0, cached: 0 };
+      return { total: b.input + b.output + b.cached, input: b.input, output: b.output, cached: b.cached };
     });
     const maxV = niceMax(Math.max(...vals.map(v => v.total)));
     const logScale = chartLogScale;
@@ -525,10 +527,12 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
         const v = vals[i];
         const bx = x(i) - barW / 2;
         if (chartMetric === 'stacked') {
-          // Stacked: output on the bottom, input on top.
+          // Stacked (bottom -> top): output, cached, input.
           const hOut = (padT + plotH) - y(v.output);
-          const hIn = y(v.output) - y(v.total);
+          const hCached = y(v.output) - y(v.output + v.cached);
+          const hIn = y(v.output + v.cached) - y(v.total);
           svg += '<rect x="' + bx + '" y="' + y(v.output) + '" width="' + barW + '" height="' + hOut + '" fill="' + C_OUT + '" rx="1"/>';
+          svg += '<rect x="' + bx + '" y="' + y(v.output + v.cached) + '" width="' + barW + '" height="' + hCached + '" fill="' + C_CACHED + '" rx="1"/>';
           svg += '<rect x="' + bx + '" y="' + y(v.total) + '" width="' + barW + '" height="' + hIn + '" fill="' + C_IN + '" rx="1"/>';
         } else {
           svg += '<rect x="' + bx + '" y="' + y(v.total) + '" width="' + barW + '" height="' + ((padT + plotH) - y(v.total)) + '" fill="' + (chartMetric === 'requests' ? C_IN : C_TOTAL) + '" rx="1"/>';
@@ -548,6 +552,7 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
       };
       if (chartMetric === 'stacked') {
         drawSeries('input', C_IN);
+        drawSeries('cached', C_CACHED);
         drawSeries('output', C_OUT);
       } else {
         drawSeries('total', C_TOTAL);
@@ -562,9 +567,10 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
     box.innerHTML = svg + '<div class="chart-tip" id="chartTip"></div>';
 
     document.getElementById('chartLegend').innerHTML =
-      (chartMetric === 'stacked' && chartType !== 'bar')
-        ? '<span class="dot" style="background:' + C_IN + '"></span>' + esc(S.input) +
-          '<span class="dot" style="background:' + C_OUT + '"></span>' + esc(S.output)
+      (chartMetric === 'stacked')
+        ? '<span class="dot" style="background:' + C_OUT + '"></span>' + esc(S.output) +
+          '<span class="dot" style="background:' + C_CACHED + '"></span>' + esc(S.cached) +
+          '<span class="dot" style="background:' + C_IN + '"></span>' + esc(S.input)
         : '';
 
     const tip = document.getElementById('chartTip');
@@ -574,7 +580,8 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
         const b = buckets[i], v = vals[i];
         let rows = '';
         if (chartMetric === 'stacked') {
-          rows = '<div><span class="dot" style="background:' + C_IN + '"></span>' + esc(S.input) + ': ' + fmt(v.input) + '</div>' +
+          rows = '<div><span class="dot" style="background:' + C_CACHED + '"></span>' + esc(S.cached) + ': ' + fmt(v.cached) + '</div>' +
+                 '<div><span class="dot" style="background:' + C_IN + '"></span>' + esc(S.input) + ': ' + fmt(v.input) + '</div>' +
                  '<div><span class="dot" style="background:' + C_OUT + '"></span>' + esc(S.output) + ': ' + fmt(v.output) + '</div>';
         } else if (chartMetric === 'requests') {
           rows = '<div>' + esc(S.requests) + ': ' + fmt(v.total) + '</div>';

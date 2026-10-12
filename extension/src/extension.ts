@@ -13,8 +13,13 @@ let currentChartType: string = 'bar';
 let currentChartMetric: string = 'total';
 let currentChartLogScale = false;
 let disabled = false;
-let sessionCache: { sessions: Session[]; at: number } | undefined;
+let sessionCache: { sessions: Session[]; at: number; days: number | null } | undefined;
 const SESSION_CACHE_TTL_MS = 30_000;
+// Monotonic id for report requests. pushReport() can be called concurrently
+// (initial sidebar retries, window switches, auto-refresh); only the most
+// recent request may post its result, otherwise a stale report can overwrite
+// a newer one (e.g. switching 7d -> 14d then seeing 7d data again).
+let reportSeq = 0;
 
 function getLanguage(): Lang {
   const cfg = vscode.workspace.getConfiguration('copilotTokens');
@@ -29,28 +34,39 @@ function getLanguage(): Lang {
  * refresh, and the auto-refresh timer force a reload from disk.
  */
 async function getSessions(
+  days: number | null,
   force = false,
   onProgress?: (done: number, total: number) => void,
 ): Promise<Session[]> {
-  if (!force && sessionCache && Date.now() - sessionCache.at < SESSION_CACHE_TTL_MS) {
+  // The cache is keyed by window (days) as well as time: a force=false request
+  // must never reuse sessions parsed for a different window, otherwise a
+  // concurrent request (e.g. a sidebar retry) can post a report labelled 14d
+  // but containing 7d data.
+  if (
+    !force &&
+    sessionCache &&
+    sessionCache.days === days &&
+    Date.now() - sessionCache.at < SESSION_CACHE_TTL_MS
+  ) {
     return sessionCache.sessions;
   }
-  // Pass currentDays so loadSessions can skip files whose mtime predates the
+  // Pass days so loadSessions can skip files whose mtime predates the
   // window. Passing null would force reading every log file (potentially GBs)
-  // and blow up memory. buildReport still filters precisely by lastTs.
-  const sessions = await loadSessions(undefined, currentDays, onProgress);
-  sessionCache = { sessions, at: Date.now() };
+  // and blow up memory. summarize() still filters precisely by request ts.
+  const sessions = await loadSessions(undefined, days, onProgress);
+  sessionCache = { sessions, at: Date.now(), days };
   return sessions;
 }
 
 async function buildReport(
+  days: number | null,
   force = false,
   onProgress?: (done: number, total: number) => void,
 ): Promise<UsageReport> {
-  const all = await getSessions(force, onProgress);
+  const all = await getSessions(days, force, onProgress);
   // summarize() filters requests by timestamp inside the selected window, so
   // the chart and totals never include data outside the range.
-  const report = summarize(all, currentDays);
+  const report = summarize(all, days);
   report.theme = currentTheme;
   report.chartType = currentChartType;
   report.chartMetric = currentChartMetric;
@@ -59,18 +75,23 @@ async function buildReport(
 }
 
 async function pushReport(force = false): Promise<UsageReport | undefined> {
-  // Tell the webview a load is starting so it can show a progress bar and a
-  // hint about how long this window may take.
-  const daysLabel = currentDays === null ? 'all' : String(currentDays);
+  // Snapshot the window at request time so a concurrent window switch can't
+  // change what this request computes, and take a monotonic id so only the
+  // most recent request posts its result (stale reports are dropped).
+  const days = currentDays;
+  const seq = ++reportSeq;
+  const daysLabel = days === null ? 'all' : String(days);
   const loadingMsg = { type: 'loading', days: daysLabel };
   if (panel) panel.webview.postMessage(loadingMsg);
   if (view) view.webview.postMessage(loadingMsg);
 
-  const report = await buildReport(force, (done, total) => {
+  const report = await buildReport(days, force, (done, total) => {
+    if (seq !== reportSeq) return; // a newer request superseded this one
     const msg = { type: 'loading', days: daysLabel, done, total };
     if (panel) panel.webview.postMessage(msg);
     if (view) view.webview.postMessage(msg);
   });
+  if (seq !== reportSeq) return report; // stale — a newer request won
   if (panel) panel.webview.postMessage({ type: 'report', report });
   if (view) view.webview.postMessage({ type: 'report', report });
   updateStatusBar(report);
@@ -109,10 +130,11 @@ function handleMessage(msg: any): void {
   switch (msg.type) {
     case 'setDays':
       currentDays = msg.days;
-      // Force a reload so the new window re-runs mtime-skip and shows real
-      // parse progress; the 30s session cache would otherwise return stale
-      // sessions instantly with no progress feedback.
-      void pushReport(true);
+      // Persist so the choice survives a restart. Writing the config fires
+      // onDidChangeConfiguration, which re-reads days and pushes a fresh
+      // report (force reload so the new window re-runs mtime-skip and shows
+      // real parse progress).
+      vscode.workspace.getConfiguration('copilotTokens').update('days', msg.days, true);
       break;
     case 'setTheme':
       currentTheme = msg.theme;
@@ -188,10 +210,10 @@ function stopAutoRefresh(): void {
 }
 
 function ensurePanel(): vscode.WebviewPanel {
-  if (disabled) {
-    vscode.window.showInformationMessage(getStrings(getLanguage()).disabledMsg);
-    throw new Error('copilot-tokens disabled');
-  }
+  // Opening the panel is always allowed, even while disabled: the sidebar
+  // view (resolveWebviewView) also opens when disabled, so Show Usage should
+  // behave the same instead of erroring. Disable only stops background work
+  // (auto-refresh, status bar); it does not block the user from viewing data.
   if (panel) {
     panel.reveal();
     return panel;
@@ -215,7 +237,7 @@ function ensurePanel(): vscode.WebviewPanel {
 async function exportJson(): Promise<void> {
   const strings = getStrings(getLanguage());
   try {
-    const report = await buildReport();
+    const report = await buildReport(currentDays);
     const uri = await vscode.window.showSaveDialog({
       defaultUri: vscode.Uri.file(
         vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
@@ -245,10 +267,12 @@ class TokensViewProvider implements vscode.WebviewViewProvider {
     webviewView.onDidDispose(() => {
       if (view === webviewView) view = undefined;
     });
-    // Push now and a few times after: the page script may not be ready for the
-    // first message, and the {type:'ready'} handler pushes again. The retries
-    // guarantee the sidebar shows data even if the handshake is lost.
-    for (const delay of [0, 500, 1500, 3000]) {
+    // Push now and once more shortly after: the page script may not be ready
+    // for the first message, and the {type:'ready'} handler pushes again. The
+    // retry guarantees the sidebar shows data even if the handshake is lost.
+    // pushReport() is race-guarded, so a stale retry can never overwrite a
+    // newer report (e.g. after the user switches the time window).
+    for (const delay of [0, 1500]) {
       setTimeout(() => void pushReport(), delay);
     }
   }
@@ -294,20 +318,34 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.workspace.onDidChangeConfiguration(e => {
       if (e.affectsConfiguration('copilotTokens.autoRefresh')) {
         startAutoRefresh();
-      } else if (
-        e.affectsConfiguration('copilotTokens.days') ||
+        return;
+      }
+      // Only re-read the window when the days setting itself changed. The
+      // other chart settings (theme/type/metric/log) are updated live from the
+      // webview and must NOT clobber currentDays, which the user sets via the
+      // dropdown (in-memory, not persisted). Re-reading days here on every
+      // chart setting change would reset a 14d selection back to the default 7.
+      if (e.affectsConfiguration('copilotTokens.days')) {
+        currentDays = vscode.workspace.getConfiguration('copilotTokens').get<number>('days', 7);
+        // Force a reload so the new window re-runs mtime-skip and shows real
+        // parse progress; the 30s session cache would otherwise return stale
+        // sessions instantly with no progress feedback.
+        void pushReport(true);
+        return;
+      }
+      if (
         e.affectsConfiguration('copilotTokens.theme') ||
         e.affectsConfiguration('copilotTokens.chartType') ||
         e.affectsConfiguration('copilotTokens.chartMetric') ||
         e.affectsConfiguration('copilotTokens.chartLogScale')
       ) {
         const c = vscode.workspace.getConfiguration('copilotTokens');
-        currentDays = c.get<number>('days', 7);
         currentTheme = c.get<string>('theme', 'default');
         currentChartType = c.get<string>('chartType', 'bar');
         currentChartMetric = c.get<string>('chartMetric', 'total');
         currentChartLogScale = c.get<boolean>('chartLogScale', false);
-        void pushReport();
+        // No re-parse needed for pure display settings; the webview already
+        // re-renders locally. Avoid pushing a report that could race.
       }
     }),
   );
