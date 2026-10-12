@@ -101,14 +101,23 @@ class DiscoveryTest(unittest.TestCase):
             self.assertEqual(ct.find_main_jsonl_files(user), [])
 
     def test_vscode_user_dir_windows(self):
+        from pathlib import PureWindowsPath
+        from unittest import mock
+
+        class FakeWindowsPath(PureWindowsPath):
+            @classmethod
+            def home(cls):
+                return PureWindowsPath("C:\\Users\\test")
+
         old_name, old_appdata = os.name, os.environ.get("APPDATA")
         os.name = "nt"
         os.environ["APPDATA"] = "C:\\Users\\test\\AppData\\Roaming"
         try:
-            self.assertEqual(
-                ct.vscode_user_dir(),
-                Path("C:\\Users\\test\\AppData\\Roaming") / "Code" / "User",
-            )
+            with mock.patch.object(ct, "Path", FakeWindowsPath):
+                self.assertEqual(
+                    str(ct.vscode_user_dir()),
+                    "C:\\Users\\test\\AppData\\Roaming\\Code\\User",
+                )
         finally:
             os.name = old_name
             if old_appdata is None:
