@@ -4,6 +4,10 @@ __pycache__/
 *.egg-info/
 .venv/
 venv/
+.coverage
+coverage.xml
+lcov.info
+htmlcov/
 
 # Build artifacts
 *.vsix
