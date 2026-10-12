@@ -39,6 +39,11 @@ export interface Strings {
   chartStacked: string;
   chartRequests: string;
   chartLogScale: string;
+  disabledMsg: string;
+  enabledMsg: string;
+  loading: string;
+  loadingHint: string;
+  loadingAllHint: string;
 }
 
 const en: Strings = {
@@ -80,6 +85,11 @@ const en: Strings = {
   chartStacked: 'Input + Output',
   chartRequests: 'Requests',
   chartLogScale: 'Log scale',
+  disabledMsg: 'Copilot Tokens disabled — auto-refresh stopped, status bar hidden. Run "Copilot Tokens: Enable" to turn it back on.',
+  enabledMsg: 'Copilot Tokens enabled.',
+  loading: 'Loading data…',
+  loadingHint: 'Loading the last {days} days. This may take a moment if there is a lot of data.',
+  loadingAllHint: 'Loading all data — this can take longer than a shorter window.',
 };
 
 const zh: Strings = {
@@ -121,6 +131,11 @@ const zh: Strings = {
   chartStacked: '输入 + 输出',
   chartRequests: '请求数',
   chartLogScale: '对数刻度',
+  disabledMsg: 'Copilot Tokens 已禁用——自动刷新已停止，状态栏已隐藏。运行 "Copilot Tokens: Enable" 重新启用。',
+  enabledMsg: 'Copilot Tokens 已启用。',
+  loading: '正在加载数据…',
+  loadingHint: '正在加载最近 {days} 天的数据。如果数据较多，可能需要一些时间。',
+  loadingAllHint: '正在加载全部数据——这比短时间窗口需要更长时间。',
 };
 
 export function getStrings(lang: Lang): Strings {

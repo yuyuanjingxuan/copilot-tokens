@@ -2,6 +2,28 @@
 
 All notable changes to the Copilot Tokens extension are documented here.
 
+## 0.2.1
+
+- **Feature**: `Copilot Tokens: Disable` / `Copilot Tokens: Enable`
+  commands — Disable stops the auto-refresh timer, hides the status bar
+  item, and closes the panel so the extension does no background work;
+  Enable restores everything. (To fully unload the extension, disable it
+  from the Extensions view.)
+- **Performance**: much faster initial load — log files are parsed
+  lazily (only when the panel/sidebar is opened), unchanged files are
+  reused from a persistent on-disk cache keyed by file mtime+size, files
+  older than the selected window are skipped, and changed files are read
+  in parallel asynchronously.
+- **Fix**: fixed an extension-host crash (out-of-memory abort) when the
+  log directory is very large — the selected window is now passed through
+  so unchanged files are skipped, and changed files are read with bounded
+  concurrency instead of all at once.
+- **UX**: a progress bar and loading hint now show while the logs are
+  being parsed, so the first load (and switching to a longer window) no
+  longer looks like a hang.
+- **Fix**: stacked bar chart now draws the output segment below the
+  input segment.
+
 ## 0.2.0
 
 - **Feature**: daily usage chart — a per-day chart of token usage over the

@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { loadSessions, summarize, UsageReport, Session } from './parser';
+import { loadSessions, summarize, setParseCacheDir, UsageReport, Session } from './parser';
 import { getStrings, resolveLanguage, Lang } from './i18n';
 import { webviewHtml } from './webview';
 
@@ -12,6 +12,7 @@ let currentTheme: string = 'default';
 let currentChartType: string = 'bar';
 let currentChartMetric: string = 'total';
 let currentChartLogScale = false;
+let disabled = false;
 let sessionCache: { sessions: Session[]; at: number } | undefined;
 const SESSION_CACHE_TTL_MS = 30_000;
 
@@ -27,17 +28,26 @@ function getLanguage(): Lang {
  * theme) is what made switching feel laggy; only days changes, explicit
  * refresh, and the auto-refresh timer force a reload from disk.
  */
-async function getSessions(force = false): Promise<Session[]> {
+async function getSessions(
+  force = false,
+  onProgress?: (done: number, total: number) => void,
+): Promise<Session[]> {
   if (!force && sessionCache && Date.now() - sessionCache.at < SESSION_CACHE_TTL_MS) {
     return sessionCache.sessions;
   }
-  const sessions = await loadSessions(undefined, null);
+  // Pass currentDays so loadSessions can skip files whose mtime predates the
+  // window. Passing null would force reading every log file (potentially GBs)
+  // and blow up memory. buildReport still filters precisely by lastTs.
+  const sessions = await loadSessions(undefined, currentDays, onProgress);
   sessionCache = { sessions, at: Date.now() };
   return sessions;
 }
 
-async function buildReport(force = false): Promise<UsageReport> {
-  const all = await getSessions(force);
+async function buildReport(
+  force = false,
+  onProgress?: (done: number, total: number) => void,
+): Promise<UsageReport> {
+  const all = await getSessions(force, onProgress);
   let sessions = all;
   if (currentDays !== null) {
     const cutoff = Date.now() - currentDays * 24 * 60 * 60 * 1000;
@@ -52,7 +62,18 @@ async function buildReport(force = false): Promise<UsageReport> {
 }
 
 async function pushReport(force = false): Promise<UsageReport | undefined> {
-  const report = await buildReport(force);
+  // Tell the webview a load is starting so it can show a progress bar and a
+  // hint about how long this window may take.
+  const daysLabel = currentDays === null ? 'all' : String(currentDays);
+  const loadingMsg = { type: 'loading', days: daysLabel };
+  if (panel) panel.webview.postMessage(loadingMsg);
+  if (view) view.webview.postMessage(loadingMsg);
+
+  const report = await buildReport(force, (done, total) => {
+    const msg = { type: 'loading', days: daysLabel, done, total };
+    if (panel) panel.webview.postMessage(msg);
+    if (view) view.webview.postMessage(msg);
+  });
   if (panel) panel.webview.postMessage({ type: 'report', report });
   if (view) view.webview.postMessage({ type: 'report', report });
   updateStatusBar(report);
@@ -126,9 +147,36 @@ function handleMessage(msg: any): void {
 
 function startAutoRefresh(): void {
   stopAutoRefresh();
+  if (disabled) return;
   const seconds = vscode.workspace.getConfiguration('copilotTokens').get<number>('autoRefresh', 60);
   if (seconds > 0) {
-    refreshTimer = setInterval(() => void pushReport(true), seconds * 1000);
+    refreshTimer = setInterval(() => {
+      // Only refresh while a view is actually open; otherwise there is
+      // nothing to update and we avoid background parsing entirely.
+      if (panel || view) void pushReport(true);
+    }, seconds * 1000);
+  }
+}
+
+/**
+ * Disable stops all background activity: the auto-refresh timer, the
+ * status bar item, and the full-width panel. The extension stays loaded
+ * (VS Code cannot disable an extension from inside itself) but does no
+ * work until re-enabled. Enable restores everything.
+ */
+function setDisabled(value: boolean): void {
+  disabled = value;
+  if (value) {
+    stopAutoRefresh();
+    if (panel) {
+      panel.dispose();
+      panel = undefined;
+    }
+    statusBar?.hide();
+  } else {
+    statusBar?.show();
+    startAutoRefresh();
+    void pushReport();
   }
 }
 
@@ -140,6 +188,10 @@ function stopAutoRefresh(): void {
 }
 
 function ensurePanel(): vscode.WebviewPanel {
+  if (disabled) {
+    vscode.window.showInformationMessage(getStrings(getLanguage()).disabledMsg);
+    throw new Error('copilot-tokens disabled');
+  }
   if (panel) {
     panel.reveal();
     return panel;
@@ -203,6 +255,10 @@ class TokensViewProvider implements vscode.WebviewViewProvider {
 }
 
 export function activate(context: vscode.ExtensionContext): void {
+  // Persist the parse cache under globalStorage so repeated loads (and loads
+  // across restarts) reuse already-parsed sessions instead of re-reading logs.
+  setParseCacheDir(context.globalStorageUri.fsPath);
+
   const cfg = vscode.workspace.getConfiguration('copilotTokens');
   currentDays = cfg.get<number>('days', 7);
   currentTheme = cfg.get<string>('theme', 'default');
@@ -225,6 +281,14 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('copilotTokens.exportJson', () => {
       ensurePanel();
       void exportJson();
+    }),
+    vscode.commands.registerCommand('copilotTokens.disable', () => {
+      setDisabled(true);
+      vscode.window.showInformationMessage(getStrings(getLanguage()).disabledMsg);
+    }),
+    vscode.commands.registerCommand('copilotTokens.enable', () => {
+      setDisabled(false);
+      vscode.window.showInformationMessage(getStrings(getLanguage()).enabledMsg);
     }),
     vscode.window.registerWebviewViewProvider('copilotTokens.view', new TokensViewProvider()),
     vscode.workspace.onDidChangeConfiguration(e => {
@@ -249,7 +313,9 @@ export function activate(context: vscode.ExtensionContext): void {
   );
 
   startAutoRefresh();
-  void pushReport();
+  // Lazy first parse: do NOT parse here. Parsing only happens once the panel
+  // or sidebar is actually opened (ensurePanel / resolveWebviewView / ready),
+  // so activation stays fast even with many log files.
 }
 
 export function deactivate(): void {

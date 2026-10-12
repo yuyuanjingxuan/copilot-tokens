@@ -185,6 +185,30 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
   .chart-tip .tip-date { font-weight: 600; margin-bottom: 2px; }
   .chart-tip .dot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; vertical-align: 0; }
   .chart-empty { text-align: center; padding: 24px 16px; opacity: 0.6; font-size: 12px; }
+  .loading-overlay {
+    position: fixed; inset: 0; z-index: 20;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--ct-bg);
+  }
+  .loading-overlay.hidden { display: none; }
+  .loading-box {
+    width: 320px; max-width: 80vw;
+    background: var(--ct-card-bg);
+    border: 1px solid var(--ct-border);
+    border-radius: 8px; padding: 20px 22px;
+  }
+  .loading-box .loading-title { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+  .loading-box .loading-hint { font-size: 11px; opacity: 0.7; margin-bottom: 12px; line-height: 1.5; }
+  .loading-track {
+    height: 6px; border-radius: 3px;
+    background: var(--ct-btn2-bg); overflow: hidden;
+  }
+  .loading-fill {
+    height: 100%; width: 0%;
+    background: var(--ct-accent);
+    transition: width 0.15s ease;
+  }
+  .loading-count { font-size: 10px; opacity: 0.6; margin-top: 6px; text-align: right; }
   .empty { text-align: center; padding: 48px 16px; opacity: 0.75; }
   .empty .hint { margin-top: 8px; font-size: 12px; max-width: 520px; margin-left: auto; margin-right: auto; line-height: 1.5; }
   .footer { margin-top: 20px; font-size: 11px; opacity: 0.5; text-align: right; }
@@ -248,6 +272,15 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
   <div id="content"></div>
   <div class="footer" id="footer"></div>
   <div class="toast" id="toast"></div>
+
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-box">
+      <div class="loading-title" id="loadingTitle"></div>
+      <div class="loading-hint" id="loadingHint"></div>
+      <div class="loading-track"><div class="loading-fill" id="loadingFill"></div></div>
+      <div class="loading-count" id="loadingCount"></div>
+    </div>
+  </div>
 
 <script>
   const vscode = acquireVsCodeApi();
@@ -490,10 +523,11 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
         const v = vals[i];
         const bx = x(i) - barW / 2;
         if (chartMetric === 'stacked') {
-          const hIn = (padT + plotH) - y(v.input);
-          const hOut = y(v.input) - y(v.total);
-          svg += '<rect x="' + bx + '" y="' + y(v.input) + '" width="' + barW + '" height="' + hIn + '" fill="' + C_IN + '" rx="1"/>';
-          svg += '<rect x="' + bx + '" y="' + y(v.total) + '" width="' + barW + '" height="' + hOut + '" fill="' + C_OUT + '" rx="1"/>';
+          // Stacked: output on the bottom, input on top.
+          const hOut = (padT + plotH) - y(v.output);
+          const hIn = y(v.output) - y(v.total);
+          svg += '<rect x="' + bx + '" y="' + y(v.output) + '" width="' + barW + '" height="' + hOut + '" fill="' + C_OUT + '" rx="1"/>';
+          svg += '<rect x="' + bx + '" y="' + y(v.total) + '" width="' + barW + '" height="' + hIn + '" fill="' + C_IN + '" rx="1"/>';
         } else {
           svg += '<rect x="' + bx + '" y="' + y(v.total) + '" width="' + barW + '" height="' + ((padT + plotH) - y(v.total)) + '" fill="' + (chartMetric === 'requests' ? C_IN : C_TOTAL) + '" rx="1"/>';
         }
@@ -567,9 +601,35 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
       S.version + ' · ' + new Date(report.generatedAt).toLocaleString();
   }
 
+  function showLoading(days, done, total) {
+    const overlay = document.getElementById('loadingOverlay');
+    overlay.classList.remove('hidden');
+    document.getElementById('loadingTitle').textContent = S.loading;
+    const isAll = days === 'all' || days === null;
+    document.getElementById('loadingHint').textContent =
+      isAll ? S.loadingAllHint : S.loadingHint.replace('{days}', String(days));
+    const fill = document.getElementById('loadingFill');
+    const count = document.getElementById('loadingCount');
+    if (total > 0) {
+      const pct = Math.min(100, Math.round((done / total) * 100));
+      fill.style.width = pct + '%';
+      count.textContent = done + ' / ' + total;
+    } else {
+      fill.style.width = '100%';
+      count.textContent = '';
+    }
+  }
+
+  function hideLoading() {
+    document.getElementById('loadingOverlay').classList.add('hidden');
+  }
+
   window.addEventListener('message', e => {
     const msg = e.data;
-    if (msg.type === 'report') {
+    if (msg.type === 'loading') {
+      showLoading(msg.days, msg.done || 0, msg.total || 0);
+    } else if (msg.type === 'report') {
+      hideLoading();
       report = msg.report;
       openSid = null;
       chartType = msg.report.chartType || 'bar';

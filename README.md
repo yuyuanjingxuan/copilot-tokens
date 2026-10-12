@@ -56,6 +56,8 @@ red, persisted in settings).
   of the status bar; click to open the panel
 - **Auto-refresh** — re-scans the logs every 60 s by default
   (`copilotTokens.autoRefresh`, `0` disables)
+- **Disable / Enable** — `Copilot Tokens: Disable` stops all background
+  activity (auto-refresh, status bar, panel); `Enable` restores it
 - **Deleted sessions** — sessions removed from the VS Code chat list are
   still counted (the tokens were consumed) but grouped at the bottom of the
   table with a "Deleted" badge

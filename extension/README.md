@@ -75,6 +75,12 @@ Enable debug log file writing in VS Code settings
 | `Copilot Tokens: Show Usage` | Open the usage panel (full-width tab) |
 | `Copilot Tokens: Refresh` | Re-scan the logs |
 | `Copilot Tokens: Export JSON` | Save the current report as a JSON file |
+| `Copilot Tokens: Disable` | Stop all background activity (auto-refresh, status bar, panel) |
+| `Copilot Tokens: Enable` | Restore background activity after Disable |
+
+To fully unload the extension (free its memory in the extension host),
+disable it from the Extensions view — `Disable` above only stops its
+background work.
 
 The dashboard is also available as a **sidebar view**: click the
 Copilot Tokens icon on the activity bar (left edge). The status bar item

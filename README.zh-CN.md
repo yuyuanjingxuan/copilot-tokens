@@ -107,6 +107,11 @@ extension/
 | `Copilot Tokens: Show Usage` | 打开用量面板 |
 | `Copilot Tokens: Refresh` | 重新扫描日志 |
 | `Copilot Tokens: Export JSON` | 将当前报告保存为 JSON 文件 |
+| `Copilot Tokens: Disable` | 停止所有后台活动（自动刷新、状态栏、面板） |
+| `Copilot Tokens: Enable` | 重新启用（恢复 Disable 停止的活动） |
+
+> 要彻底卸载扩展（释放 extension host 中的内存），请在扩展视图中禁用它；
+> `Disable` 命令只是停止其后台工作。
 
 ### 设置
 

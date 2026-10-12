@@ -3,6 +3,58 @@ import * as os from 'os';
 import * as path from 'path';
 import initSqlJs from 'sql.js';
 
+// ── Parse cache ─────────────────────────────────────────────────────────────
+// Each main.jsonl is keyed by (mtimeMs, size). If a file is unchanged since
+// the last parse we reuse the cached Session instead of re-reading and
+// re-parsing it, so repeated refreshes are near-instant. The cache is
+// persisted to disk (globalStorage) so it survives VS Code restarts.
+
+let parseCacheDir: string | undefined;
+let parseCache: Record<string, { mtimeMs: number; size: number; session: Session | null }> = {};
+let parseCacheLoaded = false;
+
+/**
+ * Set the directory used to persist the parse cache. Call once from
+ * activate() with the extension's globalStoragePath.
+ */
+export function setParseCacheDir(dir: string): void {
+  parseCacheDir = dir;
+  try {
+    fs.mkdirSync(dir, { recursive: true });
+  } catch { /* ignore */ }
+}
+
+function parseCacheFile(): string {
+  return path.join(parseCacheDir ?? os.tmpdir(), 'parse-cache.json');
+}
+
+function loadParseCache(): void {
+  if (parseCacheLoaded) return;
+  parseCacheLoaded = true;
+  try {
+    const raw = fs.readFileSync(parseCacheFile(), 'utf8');
+    parseCache = JSON.parse(raw);
+  } catch { /* no cache yet */ }
+}
+
+function saveParseCache(): void {
+  if (!parseCacheDir) return;
+  try {
+    fs.writeFileSync(parseCacheFile(), JSON.stringify(parseCache));
+  } catch { /* ignore */ }
+}
+
+function cachedSession(file: string, mtimeMs: number, size: number): Session | null | undefined {
+  loadParseCache();
+  const hit = parseCache[file];
+  if (hit && hit.mtimeMs === mtimeMs && hit.size === size) return hit.session;
+  return undefined; // miss
+}
+
+function storeSession(file: string, mtimeMs: number, size: number, session: Session | null): void {
+  parseCache[file] = { mtimeMs, size, session };
+}
+
 // ── Data model ──────────────────────────────────────────────────────────────
 
 export interface LlmRequest {
@@ -129,73 +181,13 @@ function asInt(v: unknown): number {
 }
 
 function parseSession(filePath: string): Session | null {
-  const sid = path.basename(path.dirname(filePath));
-  const sess: Session = {
-    sid,
-    path: filePath,
-    title: '',
-    firstTs: 0,
-    lastTs: 0,
-    vscodeVersion: '',
-    copilotVersion: '',
-    requests: [],
-  };
-  let titleTaken = false;
-
   let content: string;
   try {
     content = fs.readFileSync(filePath, 'utf8');
   } catch {
     return null;
   }
-
-  for (const line of content.split(/\r?\n/)) {
-    const trimmed = line.trim();
-    if (!trimmed) continue;
-    let ev: any;
-    try {
-      ev = JSON.parse(trimmed);
-    } catch {
-      continue;
-    }
-
-    const etype: string = ev.type ?? '';
-    const ts = asInt(ev.ts);
-    const attrs: any = ev.attrs ?? {};
-
-    if (ts) {
-      sess.firstTs = sess.firstTs ? Math.min(sess.firstTs, ts) : ts;
-      sess.lastTs = Math.max(sess.lastTs, ts);
-    }
-
-    if (etype === 'session_start') {
-      sess.vscodeVersion = String(attrs.vscodeVersion ?? '');
-      sess.copilotVersion = String(attrs.copilotVersion ?? '');
-    } else if (etype === 'user_message' && !titleTaken) {
-      let text = String(attrs.content ?? '').trim();
-      if (text) {
-        text = text.replace(/\s+/g, ' ');
-        const m = text.match(/<userRequest>\s*([\s\S]+?)\s*<\/userRequest>/);
-        if (m) text = m[1];
-        sess.title = text.length > 60 ? text.slice(0, 60) + '…' : text;
-        titleTaken = true;
-      }
-    } else if (etype === 'llm_request') {
-      sess.requests.push({
-        ts,
-        durMs: asInt(ev.dur),
-        model: String(attrs.model ?? ''),
-        inputTokens: asInt(attrs.inputTokens),
-        outputTokens: asInt(attrs.outputTokens),
-        cachedTokens: asInt(attrs.cachedTokens),
-        responseId: String(attrs.responseId ?? ''),
-      });
-    }
-  }
-
-  if (sess.requests.length === 0) return null;
-  sess.requests.sort((a, b) => a.ts - b.ts);
-  return sess;
+  return parseSessionContent(filePath, content);
 }
 
 // ── Live session detection (session-store.db) ───────────────────────────────
@@ -253,12 +245,74 @@ export async function loadLiveSessionIds(): Promise<Set<string> | null> {
  * sessions deleted from the VS Code chat list, and sort live sessions
  * first (newest lastTs first) with deleted ones grouped after.
  */
-export async function loadSessions(root?: string, days: number | null = 7): Promise<Session[]> {
+export async function loadSessions(
+  root?: string,
+  days: number | null = 7,
+  onProgress?: (done: number, total: number) => void,
+): Promise<Session[]> {
+  const files = findMainJsonlFiles(root);
+
+  // Skip files whose last write predates the window: they cannot contain
+  // requests inside the window, so there is no need to read them at all.
+  let candidates = files;
+  if (days !== null) {
+    const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+    candidates = files.filter(f => {
+      try {
+        return fs.statSync(f).mtimeMs >= cutoff;
+      } catch {
+        return true;
+      }
+    });
+  }
+
+  // Read + parse unchanged files from the cache, changed files in parallel.
   const seen = new Map<string, Session>();
-  for (const file of findMainJsonlFiles(root)) {
-    const s = parseSession(file);
+  const toParse: { file: string; mtimeMs: number; size: number }[] = [];
+  for (const file of candidates) {
+    let mtimeMs = 0, size = 0;
+    try {
+      const st = fs.statSync(file);
+      mtimeMs = st.mtimeMs;
+      size = st.size;
+    } catch {
+      continue;
+    }
+    const hit = cachedSession(file, mtimeMs, size);
+    if (hit !== undefined) {
+      if (hit && !seen.has(hit.sid)) seen.set(hit.sid, hit);
+    } else {
+      toParse.push({ file, mtimeMs, size });
+    }
+  }
+
+  // Parse the changed files with bounded concurrency. Reading every file at
+  // once (Promise.all over all files) can pull multiple GB into memory and
+  // crash the extension host with an out-of-memory abort. A small window of
+  // parallel reads keeps memory flat while still being much faster than
+  // strictly sequential parsing. onProgress reports how many files are done
+  // so the UI can show a progress bar.
+  const CONCURRENCY = 2;
+  const total = toParse.length;
+  let done = 0;
+  const parsed: (Session | null)[] = [];
+  for (let i = 0; i < toParse.length; i += CONCURRENCY) {
+    const chunk = toParse.slice(i, i + CONCURRENCY);
+    const results = await Promise.all(
+      chunk.map(async ({ file, mtimeMs, size }) => {
+        const s = await parseSessionAsync(file);
+        storeSession(file, mtimeMs, size, s);
+        return s;
+      }),
+    );
+    parsed.push(...results);
+    done += chunk.length;
+    if (onProgress) onProgress(done, total);
+  }
+  for (const s of parsed) {
     if (s && !seen.has(s.sid)) seen.set(s.sid, s);
   }
+  saveParseCache();
 
   let sessions = [...seen.values()];
   if (days !== null) {
@@ -272,6 +326,93 @@ export async function loadSessions(root?: string, days: number | null = 7): Prom
   sessions.sort((a, b) =>
     Number(a.deleted ?? false) - Number(b.deleted ?? false) || b.lastTs - a.lastTs);
   return sessions;
+}
+
+/** Async variant of parseSession that reads the file off the event loop. */
+async function parseSessionAsync(filePath: string): Promise<Session | null> {
+  let content: string;
+  try {
+    content = await fs.promises.readFile(filePath, 'utf8');
+  } catch {
+    return null;
+  }
+  return parseSessionContent(filePath, content);
+}
+
+/**
+ * Parse a session from already-read file content. Extracted from
+ * parseSession so both the sync and async paths share the same logic.
+ */
+function parseSessionContent(filePath: string, content: string): Session | null {
+  const sid = path.basename(path.dirname(filePath));
+  const sess: Session = {
+    sid,
+    path: filePath,
+    title: '',
+    firstTs: 0,
+    lastTs: 0,
+    vscodeVersion: '',
+    copilotVersion: '',
+    requests: [],
+  };
+  let titleTaken = false;
+
+  // Iterate line by line without materializing a giant array of every line
+  // (content.split(/\r?\n/) would double memory for multi-hundred-MB files).
+  let start = 0;
+  while (start < content.length) {
+    let end = content.indexOf('\n', start);
+    if (end === -1) end = content.length;
+    let line = content.slice(start, end);
+    if (line.endsWith('\r')) line = line.slice(0, -1);
+    start = end + 1;
+
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    let ev: any;
+    try {
+      ev = JSON.parse(trimmed);
+    } catch {
+      continue;
+    }
+
+    const etype: string = ev.type ?? '';
+    const ts = asInt(ev.ts);
+    const attrs: any = ev.attrs ?? {};
+
+    if (ts) {
+      sess.firstTs = sess.firstTs ? Math.min(sess.firstTs, ts) : ts;
+      sess.lastTs = Math.max(sess.lastTs, ts);
+    }
+
+    if (etype === 'session_start') {
+      sess.vscodeVersion = String(attrs.vscodeVersion ?? '');
+      sess.copilotVersion = String(attrs.copilotVersion ?? '');
+    } else if (etype === 'user_message' && !titleTaken) {
+      let text = String(attrs.content ?? '').trim();
+      if (text) {
+        text = text.replace(/\s+/g, ' ');
+        const m = text.match(/<userRequest>\s*([\s\S]+?)\s*<\/userRequest>/);
+        if (m) text = m[1];
+        sess.title = text.length > 60 ? text.slice(0, 60) + '…' : text;
+        titleTaken = true;
+      }
+    } else if (etype === 'llm_request') {
+      sess.requests.push({
+        ts,
+        durMs: asInt(ev.dur),
+        model: String(attrs.model ?? ''),
+        inputTokens: asInt(attrs.inputTokens),
+        outputTokens: asInt(attrs.outputTokens),
+        cachedTokens: asInt(attrs.cachedTokens),
+        responseId: String(attrs.responseId ?? ''),
+      });
+    }
+  }
+
+  if (sess.requests.length === 0) return null;
+  sess.requests.sort((a, b) => a.ts - b.ts);
+  return sess;
 }
 
 // ── Aggregation ─────────────────────────────────────────────────────────────
