@@ -60,6 +60,9 @@ Enable debug log file writing in VS Code settings
   output stacked, request count) and hover for details; "Input + Output"
   draws two series in line/area mode; optional log-scale y-axis; windows
   longer than 180 days aggregate by week
+
+![Daily usage chart](docs/chart-preview.png)
+
 - **JSON export** — save the current report as a UTF-8 JSON file
 - **Theming** — follows your light/dark theme; 5 accent color themes
   (default / green / purple / orange / red), persisted in settings

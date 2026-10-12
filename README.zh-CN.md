@@ -56,6 +56,8 @@ VS Code Copilot Chat 的 token 用量统计工具（Windows / macOS / Linux）�
   “输入+输出”在折线/面积模式下画两条线；可选对数刻度 y 轴；
   超过 180 天自动按周聚合
 
+![每日用量图表](docs/chart-preview.png)
+
 ![扩展预览](docs/extension-preview.png)
 
 ![扩展配色主题](docs/extension-themes.png)

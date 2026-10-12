@@ -65,6 +65,8 @@ red, persisted in settings).
   over the selected window, with a metric switch (total tokens, input +
   output, requests), hover tooltips, and an optional log-scale y-axis
 
+![Daily usage chart](docs/chart-preview.png)
+
 > **How the selected window is counted.** The window (7 / 14 / 30 / 60 /
 > 90 days, or "All") is applied to **request timestamps**, not to when a
 > session was last active. Only requests whose timestamp falls inside the
