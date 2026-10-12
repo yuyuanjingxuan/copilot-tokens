@@ -48,12 +48,9 @@ async function buildReport(
   onProgress?: (done: number, total: number) => void,
 ): Promise<UsageReport> {
   const all = await getSessions(force, onProgress);
-  let sessions = all;
-  if (currentDays !== null) {
-    const cutoff = Date.now() - currentDays * 24 * 60 * 60 * 1000;
-    sessions = all.filter(s => s.lastTs >= cutoff);
-  }
-  const report = summarize(sessions, currentDays);
+  // summarize() filters requests by timestamp inside the selected window, so
+  // the chart and totals never include data outside the range.
+  const report = summarize(all, currentDays);
   report.theme = currentTheme;
   report.chartType = currentChartType;
   report.chartMetric = currentChartMetric;
@@ -112,7 +109,10 @@ function handleMessage(msg: any): void {
   switch (msg.type) {
     case 'setDays':
       currentDays = msg.days;
-      void pushReport();
+      // Force a reload so the new window re-runs mtime-skip and shows real
+      // parse progress; the 30s session cache would otherwise return stale
+      // sessions instantly with no progress feedback.
+      void pushReport(true);
       break;
     case 'setTheme':
       currentTheme = msg.theme;

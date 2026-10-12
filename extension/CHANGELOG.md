@@ -23,6 +23,10 @@ All notable changes to the Copilot Tokens extension are documented here.
   longer looks like a hang.
 - **Fix**: stacked bar chart now draws the output segment below the
   input segment.
+- **Fix**: the selected window (7 / 14 / 30 days / All) is now applied to
+  request timestamps, not session activity — only requests inside the
+  window are counted and drawn, so the chart and totals never include data
+  outside the selected range.
 
 ## 0.2.0
 

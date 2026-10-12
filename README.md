@@ -65,6 +65,16 @@ red, persisted in settings).
   over the selected window, with a metric switch (total tokens, input +
   output, requests), hover tooltips, and an optional log-scale y-axis
 
+> **How the selected window is counted.** The window (7 / 14 / 30 / 60 /
+> 90 days, or "All") is applied to **request timestamps**, not to when a
+> session was last active. Only requests whose timestamp falls inside the
+> window are counted and drawn — a session that started weeks ago but had a
+> request today contributes only today's request, and the chart never shows
+> data outside the selected range. Sessions with no in-window requests are
+> omitted. (For performance, log files whose last write predates the window
+> are skipped entirely; a request can only exist in a file that was written
+> around the same time, so this does not change the result.)
+
 ![Extension preview](docs/extension-preview.png)
 
 ![Extension color themes](docs/extension-themes.png)

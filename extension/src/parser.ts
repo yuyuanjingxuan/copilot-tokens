@@ -295,6 +295,9 @@ export async function loadSessions(
   const CONCURRENCY = 2;
   const total = toParse.length;
   let done = 0;
+  // If nothing needs parsing (all files hit the cache), still let the caller
+  // know immediately so the UI can hide the progress bar instead of waiting.
+  if (total === 0 && onProgress) onProgress(0, 0);
   const parsed: (Session | null)[] = [];
   for (let i = 0; i < toParse.length; i += CONCURRENCY) {
     const chunk = toParse.slice(i, i + CONCURRENCY);
@@ -418,16 +421,25 @@ function parseSessionContent(filePath: string, content: string): Session | null 
 // ── Aggregation ─────────────────────────────────────────────────────────────
 
 export function summarize(sessions: Session[], days: number | null): UsageReport {
-  const summaries: SessionSummary[] = sessions.map(s => {
-    const inputTokens = s.requests.reduce((a, r) => a + r.inputTokens, 0);
-    const outputTokens = s.requests.reduce((a, r) => a + r.outputTokens, 0);
-    const cachedTokens = s.requests.reduce((a, r) => a + r.cachedTokens, 0);
+  // When a window is selected, count only the requests that actually fall
+  // inside it (by request timestamp), not every request of a session that
+  // merely had some activity in the window. This keeps the chart and totals
+  // free of data outside the selected range. Sessions with no in-window
+  // requests are dropped entirely.
+  const cutoff = days === null ? 0 : Date.now() - days * 24 * 60 * 60 * 1000;
+  const summaries: SessionSummary[] = [];
+  for (const s of sessions) {
+    const reqs = days === null ? s.requests : s.requests.filter(r => r.ts >= cutoff);
+    if (reqs.length === 0) continue;
+    const inputTokens = reqs.reduce((a, r) => a + r.inputTokens, 0);
+    const outputTokens = reqs.reduce((a, r) => a + r.outputTokens, 0);
+    const cachedTokens = reqs.reduce((a, r) => a + r.cachedTokens, 0);
     const modelCounts = new Map<string, number>();
-    for (const r of s.requests) {
+    for (const r of reqs) {
       const m = r.model || '?';
       modelCounts.set(m, (modelCounts.get(m) ?? 0) + 1);
     }
-    return {
+    summaries.push({
       sid: s.sid,
       title: s.title,
       deleted: s.deleted,
@@ -435,7 +447,7 @@ export function summarize(sessions: Session[], days: number | null): UsageReport
       lastTs: s.lastTs,
       vscodeVersion: s.vscodeVersion,
       copilotVersion: s.copilotVersion,
-      requestCount: s.requests.length,
+      requestCount: reqs.length,
       inputTokens,
       outputTokens,
       cachedTokens,
@@ -443,9 +455,9 @@ export function summarize(sessions: Session[], days: number | null): UsageReport
       models: [...modelCounts.entries()]
         .map(([model, count]) => ({ model, count }))
         .sort((a, b) => b.count - a.count),
-      requests: s.requests,
-    };
-  });
+      requests: reqs,
+    });
+  }
 
   return {
     generatedAt: Date.now(),

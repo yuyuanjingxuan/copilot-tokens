@@ -229,7 +229,9 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
       <label for="days">${strings.days}</label>
       <select id="days">
         <option value="7">7</option>
+        <option value="14">14</option>
         <option value="30">30</option>
+        <option value="60">60</option>
         <option value="90">90</option>
         <option value="all">${strings.all}</option>
       </select>
@@ -603,6 +605,11 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
 
   function showLoading(days, done, total) {
     const overlay = document.getElementById('loadingOverlay');
+    // Nothing to parse (all files cached) — hide the overlay immediately.
+    if (total === 0) {
+      overlay.classList.add('hidden');
+      return;
+    }
     overlay.classList.remove('hidden');
     document.getElementById('loadingTitle').textContent = S.loading;
     const isAll = days === 'all' || days === null;
