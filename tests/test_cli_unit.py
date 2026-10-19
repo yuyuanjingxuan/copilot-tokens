@@ -335,13 +335,14 @@ class FormatTest(unittest.TestCase):
         self.assertEqual(ct.fmt_ts(0), "-")
 
     def test_model_summary_truncation(self):
-        models = {f"model-{i}": 1 for i in range(20)}
+        models = {f"model-{i}": {"count": 1} for i in range(20)}
         s = ct.model_summary(models)
         self.assertLessEqual(len(s), 41)
         self.assertTrue(s.endswith("…"))
 
     def test_model_summary_counts(self):
-        self.assertEqual(ct.model_summary({"a": 2, "b": 1}), "a×2, b")
+        models = {"a": {"count": 2}, "b": {"count": 1}}
+        self.assertEqual(ct.model_summary(models), "a×2, b")
 
     def test_print_table_empty(self):
         buf = io.StringIO()

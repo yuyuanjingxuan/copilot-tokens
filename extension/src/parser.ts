@@ -79,6 +79,15 @@ export interface Session {
   deleted?: boolean;
 }
 
+export interface ModelSummary {
+  model: string;
+  count: number;
+  inputTokens: number;
+  outputTokens: number;
+  cachedTokens: number;
+  totalTokens: number;
+}
+
 export interface SessionSummary {
   sid: string;
   title: string;
@@ -92,7 +101,7 @@ export interface SessionSummary {
   outputTokens: number;
   cachedTokens: number;
   totalTokens: number;
-  models: { model: string; count: number }[];
+  models: ModelSummary[];
   requests: LlmRequest[];
 }
 
@@ -104,6 +113,7 @@ export interface UsageReport {
   chartMetric: string;   // total | stacked | requests
   chartLogScale: boolean;
   sessions: SessionSummary[];
+  models: ModelSummary[];   // aggregated across all sessions
   totals: {
     sessions: number;
     requests: number;
@@ -434,11 +444,20 @@ export function summarize(sessions: Session[], days: number | null): UsageReport
     const inputTokens = reqs.reduce((a, r) => a + r.inputTokens, 0);
     const outputTokens = reqs.reduce((a, r) => a + r.outputTokens, 0);
     const cachedTokens = reqs.reduce((a, r) => a + r.cachedTokens, 0);
-    const modelCounts = new Map<string, number>();
+    const modelMap = new Map<string, ModelSummary>();
     for (const r of reqs) {
       const m = r.model || '?';
-      modelCounts.set(m, (modelCounts.get(m) ?? 0) + 1);
+      const cur = modelMap.get(m) ?? {
+        model: m, count: 0, inputTokens: 0, outputTokens: 0, cachedTokens: 0, totalTokens: 0,
+      };
+      cur.count += 1;
+      cur.inputTokens += r.inputTokens;
+      cur.outputTokens += r.outputTokens;
+      cur.cachedTokens += r.cachedTokens;
+      cur.totalTokens += r.inputTokens + r.outputTokens;
+      modelMap.set(m, cur);
     }
+    const models = [...modelMap.values()].sort((a, b) => b.totalTokens - a.totalTokens);
     summaries.push({
       sid: s.sid,
       title: s.title,
@@ -452,12 +471,27 @@ export function summarize(sessions: Session[], days: number | null): UsageReport
       outputTokens,
       cachedTokens,
       totalTokens: inputTokens + outputTokens,
-      models: [...modelCounts.entries()]
-        .map(([model, count]) => ({ model, count }))
-        .sort((a, b) => b.count - a.count),
+      models,
       requests: reqs,
     });
   }
+
+  // Aggregate model usage across all sessions in the window.
+  const modelAgg = new Map<string, ModelSummary>();
+  for (const s of summaries) {
+    for (const m of s.models) {
+      const cur = modelAgg.get(m.model) ?? {
+        model: m.model, count: 0, inputTokens: 0, outputTokens: 0, cachedTokens: 0, totalTokens: 0,
+      };
+      cur.count += m.count;
+      cur.inputTokens += m.inputTokens;
+      cur.outputTokens += m.outputTokens;
+      cur.cachedTokens += m.cachedTokens;
+      cur.totalTokens += m.totalTokens;
+      modelAgg.set(m.model, cur);
+    }
+  }
+  const models = [...modelAgg.values()].sort((a, b) => b.totalTokens - a.totalTokens);
 
   return {
     generatedAt: Date.now(),
@@ -467,6 +501,7 @@ export function summarize(sessions: Session[], days: number | null): UsageReport
     chartMetric: 'total',
     chartLogScale: false,
     sessions: summaries,
+    models,
     totals: {
       sessions: summaries.length,
       requests: summaries.reduce((a, s) => a + s.requestCount, 0),

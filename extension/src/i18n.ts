@@ -7,6 +7,7 @@ export interface Strings {
   all: string;
   refresh: string;
   exportJson: string;
+  exportCsv: string;
   sessions: string;
   requests: string;
   input: string;
@@ -24,6 +25,8 @@ export interface Strings {
   close: string;
   exportDone: string;
   exportFailed: string;
+  csvDone: string;
+  csvFailed: string;
   version: string;
   theme: string;
   refreshed: string;
@@ -39,6 +42,7 @@ export interface Strings {
   chartStacked: string;
   chartRequests: string;
   chartLogScale: string;
+  modelBreakdown: string;
   disabledMsg: string;
   enabledMsg: string;
   loading: string;
@@ -53,6 +57,7 @@ const en: Strings = {
   all: 'All',
   refresh: 'Refresh',
   exportJson: 'Export JSON',
+  exportCsv: 'Export CSV',
   sessions: 'Sessions',
   requests: 'Requests',
   input: 'Input',
@@ -70,6 +75,8 @@ const en: Strings = {
   close: 'Close',
   exportDone: 'JSON exported',
   exportFailed: 'Export failed',
+  csvDone: 'CSV exported',
+  csvFailed: 'CSV export failed',
   version: 'Version',
   theme: 'Theme',
   refreshed: 'Updated',
@@ -85,6 +92,7 @@ const en: Strings = {
   chartStacked: 'Stacked (In + Out + Cache)',
   chartRequests: 'Requests',
   chartLogScale: 'Log scale',
+  modelBreakdown: 'By model',
   disabledMsg: 'Copilot Tokens disabled — auto-refresh stopped, status bar hidden. Run "Copilot Tokens: Enable" to turn it back on.',
   enabledMsg: 'Copilot Tokens enabled.',
   loading: 'Loading data…',
@@ -99,6 +107,7 @@ const zh: Strings = {
   all: '全部',
   refresh: '刷新',
   exportJson: '导出 JSON',
+  exportCsv: '导出 CSV',
   sessions: '会话数',
   requests: '请求数',
   input: '输入',
@@ -116,6 +125,8 @@ const zh: Strings = {
   close: '关闭',
   exportDone: 'JSON 已导出',
   exportFailed: '导出失败',
+  csvDone: 'CSV 已导出',
+  csvFailed: 'CSV 导出失败',
   version: '版本',
   theme: '配色',
   refreshed: '已更新',
@@ -131,6 +142,7 @@ const zh: Strings = {
   chartStacked: '堆叠（输入 + 输出 + 缓存）',
   chartRequests: '请求数',
   chartLogScale: '对数刻度',
+  modelBreakdown: '按模型',
   disabledMsg: 'Copilot Tokens 已禁用——自动刷新已停止，状态栏已隐藏。运行 "Copilot Tokens: Enable" 重新启用。',
   enabledMsg: 'Copilot Tokens 已启用。',
   loading: '正在加载数据…',

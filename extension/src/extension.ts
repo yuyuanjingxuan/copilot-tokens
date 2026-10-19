@@ -164,6 +164,9 @@ function handleMessage(msg: any): void {
     case 'export':
       void exportJson();
       break;
+    case 'exportCsv':
+      void exportCsv();
+      break;
   }
 }
 
@@ -254,6 +257,46 @@ async function exportJson(): Promise<void> {
   }
 }
 
+/** Escape a value for a CSV cell (quote if it contains comma/quote/newline). */
+function csvCell(v: string | number): string {
+  const s = String(v);
+  return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+}
+
+async function exportCsv(): Promise<void> {
+  const strings = getStrings(getLanguage());
+  try {
+    const report = await buildReport(currentDays);
+    const uri = await vscode.window.showSaveDialog({
+      defaultUri: vscode.Uri.file(
+        vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
+          ? `${vscode.workspace.workspaceFolders[0].uri.fsPath}/copilot-tokens-${new Date().toISOString().slice(0, 10)}.csv`
+          : `copilot-tokens-${new Date().toISOString().slice(0, 10)}.csv`,
+      ),
+      filters: { CSV: ['csv'] },
+    });
+    if (!uri) return;
+
+    const header = [
+      'session', 'title', 'deleted', 'first_ts', 'last_ts',
+      'vscode_version', 'copilot_version', 'requests',
+      'input_tokens', 'output_tokens', 'cached_tokens', 'total_tokens',
+      'models',
+    ];
+    const rows = report.sessions.map(s => [
+      s.sid, s.title, s.deleted ? '1' : '0', s.firstTs, s.lastTs,
+      s.vscodeVersion, s.copilotVersion, s.requestCount,
+      s.inputTokens, s.outputTokens, s.cachedTokens, s.totalTokens,
+      s.models.map(m => `${m.model}(${m.count})`).join('; '),
+    ]);
+    const csv = [header, ...rows].map(r => r.map(csvCell).join(',')).join('\r\n');
+    await vscode.workspace.fs.writeFile(uri, Buffer.from('\ufeff' + csv, 'utf8'));
+    panel?.webview.postMessage({ type: 'toast', text: strings.csvDone });
+  } catch {
+    panel?.webview.postMessage({ type: 'toast', text: strings.csvFailed });
+  }
+}
+
 class TokensViewProvider implements vscode.WebviewViewProvider {
   resolveWebviewView(webviewView: vscode.WebviewView): void {
     // WebviewView's webview already exists here and enableScripts defaults to
@@ -305,6 +348,10 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('copilotTokens.exportJson', () => {
       ensurePanel();
       void exportJson();
+    }),
+    vscode.commands.registerCommand('copilotTokens.exportCsv', () => {
+      ensurePanel();
+      void exportCsv();
     }),
     vscode.commands.registerCommand('copilotTokens.disable', () => {
       setDisabled(true);

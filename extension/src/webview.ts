@@ -158,6 +158,26 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
   .detail-table th { position: static; background: transparent; }
   .detail-table td, .detail-table th { padding: 3px 14px 3px 0; }
   .chart-wrap { margin-bottom: 18px; }
+  .models-wrap { margin-bottom: 18px; }
+  .models-head {
+    font-size: 12px; font-weight: 600; opacity: 0.8;
+    margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.4px;
+  }
+  .models-box {
+    background: var(--ct-card-bg);
+    border: 1px solid var(--ct-border);
+    border-radius: 6px;
+    padding: 6px 12px;
+  }
+  .models-box table { width: 100%; }
+  .models-box th, .models-box td { padding: 5px 10px; }
+  .models-box th { position: static; background: transparent; }
+  .models-box .model-name { font-family: var(--vscode-editor-font-family, monospace); font-size: 12px; }
+  .models-box .model-bar {
+    height: 6px; border-radius: 3px;
+    background: var(--ct-btn2-bg); overflow: hidden; min-width: 60px;
+  }
+  .models-box .model-bar-fill { height: 100%; background: var(--ct-accent); }
   .chart-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
   .chart-head .chart-title { font-size: 12px; font-weight: 600; opacity: 0.8; margin-right: auto; }
   .chart-log { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; opacity: 0.8; cursor: pointer; }
@@ -245,10 +265,16 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
       </select>
       <button id="refresh" class="secondary" title="${strings.refresh}">&#x21bb; ${strings.refresh}</button>
       <button id="export" class="secondary">${strings.exportJson}</button>
+      <button id="exportCsv" class="secondary">${strings.exportCsv}</button>
     </div>
   </div>
 
   <div class="cards" id="cards"></div>
+
+  <div class="models-wrap" id="modelsWrap" style="display:none">
+    <div class="models-head">${strings.modelBreakdown}</div>
+    <div id="modelsTable"></div>
+  </div>
 
   <div class="chart-wrap">
     <div class="chart-head">
@@ -325,6 +351,35 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
       '<div class="card' + (accent ? ' accent' : '') + '"><div class="label">' + esc(label) +
       '</div><div class="value">' + esc(value) + '</div></div>'
     ).join('');
+  }
+
+  function renderModels() {
+    const wrap = document.getElementById('modelsWrap');
+    const el = document.getElementById('modelsTable');
+    const models = (report && report.models) || [];
+    if (!models.length) {
+      wrap.style.display = 'none';
+      return;
+    }
+    wrap.style.display = '';
+    const max = Math.max(...models.map(m => m.totalTokens), 1);
+    const rows = models.map(m =>
+      '<tr>' +
+      '<td class="model-name">' + esc(m.model) + '</td>' +
+      '<td class="num">' + fmt(m.count) + '</td>' +
+      '<td class="num">' + fmt(m.inputTokens) + '</td>' +
+      '<td class="num">' + fmt(m.outputTokens) + '</td>' +
+      '<td class="num">' + fmt(m.cachedTokens) + '</td>' +
+      '<td class="num"><b>' + fmt(m.totalTokens) + '</b></td>' +
+      '<td style="width:120px"><div class="model-bar"><div class="model-bar-fill" style="width:' +
+        Math.round((m.totalTokens / max) * 100) + '%"></div></div></td>' +
+      '</tr>'
+    ).join('');
+    el.innerHTML = '<div class="models-box"><table><thead><tr>' +
+      '<th>' + esc(S.model) + '</th><th class="num">' + esc(S.reqs) + '</th>' +
+      '<th class="num">' + esc(S.input) + '</th><th class="num">' + esc(S.output) + '</th>' +
+      '<th class="num">' + esc(S.cached) + '</th><th class="num">' + esc(S.total) + '</th>' +
+      '<th></th></tr></thead><tbody>' + rows + '</tbody></table></div>';
   }
 
   function renderTable() {
@@ -604,6 +659,7 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
   function render() {
     if (!report) return;
     renderCards(report.totals);
+    renderModels();
     renderChart();
     renderTable();
     document.getElementById('footer').textContent =
@@ -690,6 +746,7 @@ export function webviewHtml(strings: Strings, cspSource: string): string {
   });
   document.getElementById('refresh').addEventListener('click', () => send({ type: 'refresh' }));
   document.getElementById('export').addEventListener('click', () => send({ type: 'export' }));
+  document.getElementById('exportCsv').addEventListener('click', () => send({ type: 'exportCsv' }));
 
   // Tell the extension the page script is ready so it can push the first
   // report now that the 'message' listener above is registered.

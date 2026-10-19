@@ -56,6 +56,10 @@
         "title": "Copilot Tokens: Export JSON"
       },
       {
+        "command": "copilotTokens.exportCsv",
+        "title": "Copilot Tokens: Export CSV"
+      },
+      {
         "command": "copilotTokens.disable",
         "title": "Copilot Tokens: Disable"
       },

@@ -109,10 +109,21 @@ class Session:
         return self.input_tokens + self.output_tokens
 
     @property
-    def models(self) -> dict[str, int]:
-        m: dict[str, int] = {}
+    def models(self) -> dict[str, dict]:
+        """Per-model usage: {model: {count, input_tokens, output_tokens,
+        cached_tokens, total_tokens}}."""
+        m: dict[str, dict] = {}
         for r in self.requests:
-            m[r.model or "?"] = m.get(r.model or "?", 0) + 1
+            key = r.model or "?"
+            cur = m.setdefault(key, {
+                "count": 0, "input_tokens": 0, "output_tokens": 0,
+                "cached_tokens": 0, "total_tokens": 0,
+            })
+            cur["count"] += 1
+            cur["input_tokens"] += r.input_tokens
+            cur["output_tokens"] += r.output_tokens
+            cur["cached_tokens"] += r.cached_tokens
+            cur["total_tokens"] += r.input_tokens + r.output_tokens
         return m
 
 
@@ -289,9 +300,9 @@ def fmt_num(n: int) -> str:
     return f"{n:,}"
 
 
-def model_summary(models: dict[str, int]) -> str:
-    parts = [f"{m}×{n}" if n > 1 else m for m, n in
-             sorted(models.items(), key=lambda x: -x[1])]
+def model_summary(models: dict[str, dict]) -> str:
+    parts = [f"{m}×{d['count']}" if d["count"] > 1 else m for m, d in
+             sorted(models.items(), key=lambda x: -x[1]["count"])]
     s = ", ".join(parts)
     return s[:40] + "…" if len(s) > 40 else s
 
