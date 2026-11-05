@@ -1,6 +1,8 @@
 .vscode/**
 .gitignore
 tsconfig.json
+# Never package previously built extensions into a new one
+*.vsix
 # sql.js: only the Node wasm build is needed at runtime
 node_modules/sql.js/dist/sql-asm*.js
 node_modules/sql.js/dist/sql-wasm-browser*
