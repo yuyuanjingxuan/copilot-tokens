@@ -45,6 +45,9 @@ Enable debug log file writing in VS Code settings
 - **Deleted sessions** — sessions you removed from the VS Code chat list
   are still counted (the tokens were consumed) but grouped at the bottom
   with a "Deleted" badge
+- **Per-model breakdown** — a "By model" section under the summary cards
+  splits requests, input, output, cached, and total tokens by model, with
+  a usage bar so you can see which model is consuming the most
 - **Expandable per-request detail** — duration, TTFT, input / output tokens,
   model for every single LLM request
 - **Activity bar icon** — click the icon on the left to open the dashboard
@@ -64,6 +67,8 @@ Enable debug log file writing in VS Code settings
 ![Daily usage chart](docs/chart-preview.png)
 
 - **JSON export** — save the current report as a UTF-8 JSON file
+- **CSV export** — save the session table as CSV with a UTF-8 BOM so Excel
+  opens it correctly
 - **Theming** — follows your light/dark theme; 5 accent color themes
   (default / green / purple / orange / red), persisted in settings
 - **i18n** — English / 简体中文, auto-detected from the VS Code display
@@ -78,6 +83,7 @@ Enable debug log file writing in VS Code settings
 | `Copilot Tokens: Show Usage` | Open the usage panel (full-width tab). This **only opens the panel to view data** — it does **not** change the enabled/disabled state. It works even while the extension is disabled (see below). |
 | `Copilot Tokens: Refresh` | Re-scan the logs and update the panel |
 | `Copilot Tokens: Export JSON` | Save the current report as a JSON file |
+| `Copilot Tokens: Export CSV` | Save the session table as CSV (UTF-8 BOM, Excel-friendly) |
 | `Copilot Tokens: Disable` | Stop all background activity: the auto-refresh timer, the status bar item, and the panel. The extension stays loaded but does no background work. |
 | `Copilot Tokens: Enable` | Restore everything that `Disable` stopped (auto-refresh, status bar, panel). |
 

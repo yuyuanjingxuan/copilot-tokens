@@ -62,9 +62,15 @@ red, persisted in settings).
 - **Deleted sessions.** Sessions removed from the VS Code chat list are
   still counted (the tokens were consumed), but they are grouped at the
   bottom of the table with a "Deleted" badge.
+- **Per-model breakdown.** A "By model" section under the summary cards
+  splits requests, input, output, cached, and total tokens by model, with
+  a usage bar so you can see which model is consuming the most.
 - **Daily usage chart.** A per-day bar / line / area chart of token usage
   over the selected window, with a metric switch (total tokens, input +
   output, requests), hover tooltips, and an optional log-scale y-axis.
+- **CSV export.** `Copilot Tokens: Export CSV` (or the **Export CSV**
+  button in the panel) saves the session table as CSV with a UTF-8 BOM so
+  Excel opens it correctly.
 
 ![Daily usage chart](docs/chart-preview.png)
 
@@ -129,6 +135,7 @@ Want the very latest version before it hits the Marketplace?
 | `Copilot Tokens: Show Usage` | Open the usage panel (full-width tab). This **only opens the panel to view data**; it does **not** change the enabled/disabled state. It works even while the extension is disabled (see below). |
 | `Copilot Tokens: Refresh` | Re-scan the logs and update the panel |
 | `Copilot Tokens: Export JSON` | Save the current report as a JSON file |
+| `Copilot Tokens: Export CSV` | Save the session table as CSV (UTF-8 BOM, Excel-friendly) |
 | `Copilot Tokens: Disable` | Stop all background activity: the auto-refresh timer, the status bar item, and the panel. The extension stays loaded but does no background work. |
 | `Copilot Tokens: Enable` | Restore everything that `Disable` stopped (auto-refresh, status bar, panel). |
 
@@ -192,6 +199,10 @@ copilot-tokens --version                # print version
 
 Running from the repo instead? Replace `copilot-tokens` with
 `python cli/copilot_tokens.py`.
+
+The JSON output includes a `models` object per session, keyed by model name,
+with `count`, `input_tokens`, `output_tokens`, `cached_tokens`, and
+`total_tokens` for each model used in that session.
 
 ### Sample output
 

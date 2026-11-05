@@ -52,10 +52,14 @@ VS Code Copilot Chat 的 token 用量统计工具（Windows / macOS / Linux）�
   设为 `0` 关闭）。
 - **已删除会话**。从 VS Code 聊天列表删除的会话仍计入统计（token 已消耗），
   但排在表格底部并带"已删除"徽章。
+- **按模型统计**。汇总卡片下方新增「按模型」区块，按模型拆分请求数、
+  输入、输出、缓存和总 token，并带用量条，一眼看出哪个模型消耗最多。
 - **每日用量图表**。按天展示所选时间窗内的 token 用量，可切换柱状 /
   折线 / 面积图，指标可选总 token / 输入+输出 / 请求数，悬停显示明细；
   "输入+输出"在折线/面积模式下画两条线；可选对数刻度 y 轴；
   超过 180 天自动按周聚合。
+- **CSV 导出**。`Copilot Tokens: Export CSV` 命令（或面板上的 **导出 CSV**
+  按钮）把会话表格保存为 CSV，带 UTF-8 BOM，Excel 打开不乱码。
 
 ![每日用量图表](docs/chart-preview.png)
 
@@ -110,6 +114,7 @@ extension/
 | `Copilot Tokens: Show Usage` | 打开用量面板（全宽标签页）。**只负责打开面板查看数据**，**不会**改变启用 / 禁用状态；即使在禁用状态下也能打开（见下方说明）。 |
 | `Copilot Tokens: Refresh` | 重新扫描日志并更新面板 |
 | `Copilot Tokens: Export JSON` | 将当前报告保存为 JSON 文件 |
+| `Copilot Tokens: Export CSV` | 将会话表格保存为 CSV（UTF-8 BOM，Excel 友好） |
 | `Copilot Tokens: Disable` | 停止所有后台活动：自动刷新定时器、状态栏、面板。扩展仍保持加载，但不做任何后台工作。 |
 | `Copilot Tokens: Enable` | 恢复 `Disable` 停止的一切（自动刷新、状态栏、面板）。 |
 
@@ -178,6 +183,10 @@ copilot-tokens --version                # 打印版本号
 ```
 
 从仓库直接运行？把 `copilot-tokens` 换成 `python cli/copilot_tokens.py` 即可。
+
+JSON 输出中每个会话带一个 `models` 对象，以模型名为键，包含该会话中
+每个模型的 `count`、`input_tokens`、`output_tokens`、`cached_tokens`
+和 `total_tokens`。
 
 ### 输出示例
 

@@ -55,6 +55,10 @@ copilot-tokens --root /path/to/User     # non-standard VS Code "User" dir
 copilot-tokens --version                # print version
 ```
 
+The JSON output includes a `models` object per session, keyed by model name,
+with `count`, `input_tokens`, `output_tokens`, `cached_tokens`, and
+`total_tokens` for each model used in that session.
+
 ## Sample output
 
 ```
