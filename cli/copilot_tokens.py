@@ -39,7 +39,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
 
-__version__ = "0.2.1"
+__version__ = "0.2.2"
 
 # ── Terminal colors (ANSI on Windows 10+; degrades gracefully) ─────────────
 def _supports_color() -> bool:

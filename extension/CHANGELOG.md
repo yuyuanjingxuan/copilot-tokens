@@ -2,6 +2,24 @@
 
 All notable changes to the Copilot Tokens extension are documented here.
 
+## 0.2.2
+
+- **Feature**: per-model token statistics. A new "By model" section under
+  the summary cards breaks down requests, input, output, cached, and total
+  tokens for each model, with a usage bar so you can see which model is
+  consuming the most.
+- **Feature**: `Copilot Tokens: Export CSV` command and an **Export CSV**
+  button in the panel. Exports the session table as CSV with a UTF-8 BOM so
+  Excel opens it correctly.
+- **Feature**: the Python CLI is now published to PyPI. Install it with
+  `pip install copilot-tokens` and run `copilot-tokens` instead of
+  `python cli/copilot_tokens.py`. The CLI also gained `--version` and now
+  reports per-model token statistics in its JSON output.
+- **CI**: a new `package` job builds the sdist and wheel, runs
+  `twine check`, and smoke-tests the installed console script on every
+  push. A new `publish-pypi.yml` workflow publishes to PyPI via Trusted
+  Publishing when a version tag is pushed.
+
 ## 0.2.1
 
 - **Feature**: `Copilot Tokens: Disable` / `Copilot Tokens: Enable`
