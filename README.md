@@ -7,6 +7,7 @@
 [![CI](https://github.com/yuyuanjingxuan/copilot-tokens/actions/workflows/ci.yml/badge.svg)](https://github.com/yuyuanjingxuan/copilot-tokens/actions/workflows/ci.yml)
 [![Coverage](https://coveralls.io/repos/github/yuyuanjingxuan/copilot-tokens/badge.svg?branch=main)](https://coveralls.io/github/yuyuanjingxuan/copilot-tokens?branch=main)
 [![VS Code Marketplace](https://img.shields.io/badge/VS_Code_Marketplace-listed-blue)](https://marketplace.visualstudio.com/items?itemName=yuyuanjingxuan.copilot-tokens)
+[![PyPI](https://img.shields.io/pypi/v/copilot-tokens.svg)](https://pypi.org/project/copilot-tokens/)
 [![VS Code](https://img.shields.io/badge/VS_Code-%E2%89%A51.85-blue.svg)](https://code.visualstudio.com/)
 [![Python](https://img.shields.io/badge/Python-3.9--3.13-blue.svg)](https://www.python.org/)
 [![CLI dependencies](https://img.shields.io/badge/CLI_dependencies-none-brightgreen.svg)]()
@@ -158,31 +159,39 @@ removed from the VS Code chat list at the bottom with a `[Deleted]` marker
 
 ### Install
 
-Nothing to install. Just run it:
+```bash
+pip install copilot-tokens
+```
+
+Or run it without installing:
+
+```bash
+pipx run copilot-tokens
+```
+
+Prefer no install at all? Run the script straight from the repo:
 
 ```bash
 # Windows: double-click cli/copilot_tokens.bat, or run in a terminal
 python cli/copilot_tokens.py
-
-# Optional: make it available globally
-# Windows
-copy cli\copilot_tokens.py %USERPROFILE%\scripts\
-# macOS / Linux
-cp cli/copilot_tokens.py ~/.local/bin/ && chmod +x ~/.local/bin/copilot_tokens
 ```
 
 ### Usage
 
 ```
-python cli/copilot_tokens.py             # sessions from the last 7 days
-python cli/copilot_tokens.py --days 30   # last 30 days
-python cli/copilot_tokens.py --all       # all sessions
-python cli/copilot_tokens.py --top 5     # top 5 sessions by total tokens
-python cli/copilot_tokens.py --session 6ec414c0   # per-request detail (prefix match)
-python cli/copilot_tokens.py --json      # JSON output
-python cli/copilot_tokens.py --json --out usage.json   # export UTF-8 JSON file
-python cli/copilot_tokens.py --root /path/to/User      # non-standard VS Code "User" dir
+copilot-tokens                          # sessions from the last 7 days
+copilot-tokens --days 30                # last 30 days
+copilot-tokens --all                    # all sessions
+copilot-tokens --top 5                  # top 5 sessions by total tokens
+copilot-tokens --session 6ec414c0       # per-request detail (prefix match)
+copilot-tokens --json                   # JSON output
+copilot-tokens --json --out usage.json  # export UTF-8 JSON file
+copilot-tokens --root /path/to/User     # non-standard VS Code "User" dir
+copilot-tokens --version                # print version
 ```
+
+Running from the repo instead? Replace `copilot-tokens` with
+`python cli/copilot_tokens.py`.
 
 ### Sample output
 

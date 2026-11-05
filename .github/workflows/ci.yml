@@ -58,6 +58,31 @@ jobs:
       - name: Compile TypeScript
         run: npm run compile
 
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install build tools
+        run: python -m pip install --upgrade build twine
+
+      - name: Build sdist and wheel
+        run: python -m build
+
+      - name: Check metadata
+        run: python -m twine check dist/*
+
+      - name: Smoke test the wheel
+        run: |
+          python -m venv /tmp/smoke
+          /tmp/smoke/bin/pip install --quiet dist/*.whl
+          /tmp/smoke/bin/copilot-tokens --version
+          /tmp/smoke/bin/copilot-tokens --help
+
       - name: Package .vsix (validate manifest)
         run: npm run package
 

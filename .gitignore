@@ -11,6 +11,8 @@ htmlcov/
 
 # Build artifacts
 *.vsix
+dist/
+build/
 
 # Exported data (may contain session titles and other personal content)
 *.json

@@ -39,6 +39,8 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
 
+__version__ = "0.2.1"
+
 # ── Terminal colors (ANSI on Windows 10+; degrades gracefully) ─────────────
 def _supports_color() -> bool:
     if os.environ.get("NO_COLOR"):
@@ -423,12 +425,13 @@ def main() -> int:
                 pass
 
     ap = argparse.ArgumentParser(
+        prog="copilot-tokens",
         description="VS Code Copilot Chat token usage tracker",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="Examples:\n"
-               "  python cli/copilot_tokens.py --days 30\n"
-               "  python cli/copilot_tokens.py --session 6ec414c0\n"
-               "  python cli/copilot_tokens.py --json > usage.json\n",
+               "  copilot-tokens --days 30\n"
+               "  copilot-tokens --session 6ec414c0\n"
+               "  copilot-tokens --json > usage.json\n",
     )
     ap.add_argument("--days", type=float, default=7, help="only show sessions from the last N days (default 7)")
     ap.add_argument("--all", action="store_true", help="show all sessions (ignore --days)")
@@ -437,6 +440,7 @@ def main() -> int:
     ap.add_argument("--json", action="store_true", help="output as JSON")
     ap.add_argument("--out", metavar="FILE", help="write results to a file (UTF-8), avoids terminal pipeline encoding issues")
     ap.add_argument("--root", metavar="DIR", help="use DIR as the VS Code 'User' directory (default: auto-detect)")
+    ap.add_argument("--version", action="version", version=f"copilot-tokens {__version__}")
     args = ap.parse_args()
 
     root = Path(args.root) if args.root else None

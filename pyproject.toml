@@ -1,0 +1,54 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "copilot-tokens"
+dynamic = ["version"]
+description = "Token usage tracker for VS Code Copilot Chat. Zero-dependency CLI that reads the local debug logs."
+readme = "cli/README.md"
+requires-python = ">=3.9"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "yuyuanjingxuan" }]
+keywords = [
+    "copilot",
+    "copilot-chat",
+    "vscode",
+    "tokens",
+    "token-usage",
+    "llm",
+    "cli",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Utilities",
+]
+dependencies = []
+
+[project.scripts]
+copilot-tokens = "copilot_tokens:main"
+
+[project.urls]
+Homepage = "https://github.com/yuyuanjingxuan/copilot-tokens"
+Repository = "https://github.com/yuyuanjingxuan/copilot-tokens"
+Issues = "https://github.com/yuyuanjingxuan/copilot-tokens/issues"
+Changelog = "https://github.com/yuyuanjingxuan/copilot-tokens/blob/main/extension/CHANGELOG.md"
+
+[tool.setuptools]
+package-dir = { "" = "cli" }
+py-modules = ["copilot_tokens"]
+
+[tool.setuptools.dynamic]
+version = { attr = "copilot_tokens.__version__" }

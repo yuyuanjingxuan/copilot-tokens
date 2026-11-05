@@ -7,6 +7,7 @@
 [![CI](https://github.com/yuyuanjingxuan/copilot-tokens/actions/workflows/ci.yml/badge.svg)](https://github.com/yuyuanjingxuan/copilot-tokens/actions/workflows/ci.yml)
 [![Coverage](https://coveralls.io/repos/github/yuyuanjingxuan/copilot-tokens/badge.svg?branch=main)](https://coveralls.io/github/yuyuanjingxuan/copilot-tokens?branch=main)
 [![VS Code Marketplace](https://img.shields.io/badge/VS_Code_Marketplace-listed-blue)](https://marketplace.visualstudio.com/items?itemName=yuyuanjingxuan.copilot-tokens)
+[![PyPI](https://img.shields.io/pypi/v/copilot-tokens.svg)](https://pypi.org/project/copilot-tokens/)
 [![VS Code](https://img.shields.io/badge/VS_Code-%E2%89%A51.85-blue.svg)](https://code.visualstudio.com/)
 [![Python](https://img.shields.io/badge/Python-3.9--3.13-blue.svg)](https://www.python.org/)
 [![CLI dependencies](https://img.shields.io/badge/CLI_dependencies-none-brightgreen.svg)]()
@@ -145,31 +146,38 @@ extension/
 
 ### 安装
 
-无需安装，直接运行：
+```bash
+pip install copilot-tokens
+```
+
+或者不安装直接运行：
+
+```bash
+pipx run copilot-tokens
+```
+
+完全不想装？直接从仓库运行脚本：
 
 ```bash
 # Windows：双击 cli/copilot_tokens.bat，或在终端运行
 python cli/copilot_tokens.py
-
-# 也可以全局可用
-# Windows
-copy cli\copilot_tokens.py %USERPROFILE%\scripts\
-# macOS / Linux
-cp cli/copilot_tokens.py ~/.local/bin/ && chmod +x ~/.local/bin/copilot_tokens
 ```
 
 ### 用法
 
 ```
-python cli/copilot_tokens.py             # 最近 7 天会话汇总
-python cli/copilot_tokens.py --days 30   # 最近 30 天
-python cli/copilot_tokens.py --all       # 全部会话
-python cli/copilot_tokens.py --top 5     # token 最多的 5 个会话
-python cli/copilot_tokens.py --session 6ec414c0   # 单会话逐请求明细（支持前缀匹配）
-python cli/copilot_tokens.py --json      # JSON 输出
-python cli/copilot_tokens.py --json --out usage.json   # 导出 UTF-8 JSON 文件
-python cli/copilot_tokens.py --root /path/to/User      # 非标准 VS Code "User" 目录
+copilot-tokens                          # 最近 7 天会话汇总
+copilot-tokens --days 30                # 最近 30 天
+copilot-tokens --all                    # 全部会话
+copilot-tokens --top 5                  # token 最多的 5 个会话
+copilot-tokens --session 6ec414c0       # 单会话逐请求明细（支持前缀匹配）
+copilot-tokens --json                   # JSON 输出
+copilot-tokens --json --out usage.json  # 导出 UTF-8 JSON 文件
+copilot-tokens --root /path/to/User     # 非标准 VS Code "User" 目录
+copilot-tokens --version                # 打印版本号
 ```
+
+从仓库直接运行？把 `copilot-tokens` 换成 `python cli/copilot_tokens.py` 即可。
 
 ### 输出示例
 

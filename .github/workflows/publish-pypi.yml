@@ -1,0 +1,85 @@
+name: Publish to PyPI
+
+# Publishes the Python CLI to PyPI when a version tag is pushed.
+#
+# Uses PyPI Trusted Publishing (OIDC), so no API token is stored in the
+# repository. One-time setup on PyPI:
+#   https://pypi.org/manage/account/publishing/
+#     PyPI Project Name: copilot-tokens
+#     Owner:             yuyuanjingxuan
+#     Repository name:   copilot-tokens
+#     Workflow name:     publish-pypi.yml
+#     Environment name:  pypi
+#
+# Usage:
+#   git tag v0.2.2
+#   git push --tags
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install build tools
+        run: python -m pip install --upgrade build twine
+
+      - name: Verify tag matches package version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          PKG=$(python -c "import re,pathlib; print(re.search(r'__version__ = \"([^\"]+)\"', pathlib.Path('cli/copilot_tokens.py').read_text()).group(1))")
+          echo "tag=$TAG package=$PKG"
+          if [ "$TAG" != "$PKG" ]; then
+            echo "::error::Tag $TAG does not match __version__ $PKG in cli/copilot_tokens.py"
+            exit 1
+          fi
+
+      - name: Build sdist and wheel
+        run: python -m build
+
+      - name: Check metadata
+        run: python -m twine check dist/*
+
+      - name: Smoke test the wheel
+        run: |
+          python -m venv /tmp/smoke
+          /tmp/smoke/bin/pip install --quiet dist/*.whl
+          /tmp/smoke/bin/copilot-tokens --version
+          /tmp/smoke/bin/copilot-tokens --help
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    name: Publish to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/copilot-tokens/
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - uses: pypa/gh-action-pypi-publish@release/v1
