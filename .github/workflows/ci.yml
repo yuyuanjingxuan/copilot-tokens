@@ -33,6 +33,9 @@ jobs:
           python -m coverage report -m
           python -m coverage lcov -o lcov.info
 
+      - name: Smoke test against fixture logs
+        run: python tests/test_smoke.py
+
       - name: Upload coverage to Coveralls
         if: matrix.python-version == '3.12'
         uses: coverallsapp/github-action@v2

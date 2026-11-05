@@ -43,7 +43,10 @@ def main() -> None:
     assert s1["requests"] == 2
     assert s1["inputTokens"] == 64053 + 9360
     assert s1["outputTokens"] == 306 + 157
-    assert s1["models"] == {"example-model": 2}
+    assert set(s1["models"]) == {"example-model"}
+    assert s1["models"]["example-model"]["count"] == 2
+    assert s1["models"]["example-model"]["input_tokens"] == 64053 + 9360
+    assert s1["models"]["example-model"]["output_tokens"] == 306 + 157
     assert s1["title"] == "example question"
     assert s1["vscodeVersion"] == "1.138.0"
     assert s1["copilotVersion"] == "0.66.0"
